@@ -1,0 +1,80 @@
+<!doctype html>
+<!--
+SPDX-License-Identifier: Apache-2.0
+Copyright (c) 2026 上海商江网络科技有限公司版权所有
+软工云（swtool.com）开发团队；uqtool@163.com
+-->
+
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title data-brand-page-title="需求中心">需求中心 | SWTOOL Cloud</title>
+  <link data-brand-favicon rel="icon" href="/assets/brand/logo.jpg">
+  <!-- Historical stylesheet reference: styles.css?v=20260927-footer-mobile-v3 -->
+  <link rel="stylesheet" href="/css/styles.css?v=20260930-ticket-center-v6">
+  <style>
+    .ticket-detail-title-row{display:flex;align-items:center;gap:10px;min-width:0;flex-wrap:wrap}.ticket-detail-title-row .ticket-title-status,.ticket-detail-title-row .ticket-title-controls{flex:0 0 auto;min-width:0}.ticket-detail-title-row .ticket-detail-title{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ticket-title-status select,.ticket-title-controls button{min-height:36px}@media (max-width:760px){.ticket-detail-title-row{align-items:stretch;gap:8px}.ticket-detail-title-row .ticket-detail-title{flex:1 1 calc(100% - 8px)}.ticket-title-status select,.ticket-title-controls button{min-height:44px;max-width:100%}.ticket-title-controls{margin-left:auto}}
+  </style>
+<link rel="stylesheet" href="/plugins/requirements-center/standalone/web/ticket-content.css?v=20261104.4"><script src="/plugins/requirements-center/standalone/web/ticket-content.js?v=20261104.1"></script></head>
+<body>
+  <div class="grain"></div>
+  <main>
+    <header class="masthead">
+      <div class="site-brand"><img data-brand-logo src="/assets/brand/logo.jpg" alt="SWTOOL Cloud Logo"><div><p class="eyebrow" data-brand-eyebrow="SUPPORT">SWTOOL CLOUD / SUPPORT</p><h1 data-brand-name>SWTOOL Cloud</h1></div></div>
+      <div class="actions"><a class="guide-link" href="/community.html">社区交流</a><a class="guide-link" href="/ticket_submit.html">新增需求</a><a class="guide-link" href="/keys">我的账户</a><a class="guide-link" href="/dashboard.html">返回首页</a></div>
+    </header>
+    <section class="proxy-usage-guide ticket-milestones" aria-labelledby="ticketMilestonesHeading" id="ticketMilestones">
+      <div class="tickets-section-heading">
+        <div><p class="eyebrow">FEATURE MILESTONES</p><h2 id="ticketMilestonesHeading">功能里程碑</h2></div>
+        <div class="actions ticket-milestone-actions">
+          <button id="ticketMilestonesToggle" type="button" aria-expanded="true">隐藏</button>
+          <button id="ticketMilestonesZoom" type="button" aria-expanded="false" hidden>放大</button>
+        </div>
+      </div>
+      <p class="ticket-milestones-summary" id="ticketMilestonesSummary" role="status" aria-live="polite">正在加载累计曲线...</p>
+      <div id="ticketMilestonesViewport" class="ticket-milestones-viewport" tabindex="0" aria-label="公开需求历史累计曲线">
+        <div id="ticketMilestonesTrack" class="ticket-milestones-track" aria-live="polite"></div>
+      </div>
+      <p class="ticket-milestones-hint" id="ticketMilestonesHint">按日期累计需求数，时间从远到近排列；点击曲线节点查看需求详情，支持双指连续缩放。</p>
+      <p class="actions ticket-milestone-submit"><a class="guide-link guide-link-primary" href="/ticket_submit.html">新增需求</a></p>
+    </section>
+    <div class="tickets-workspace">
+      <section class="proxy-usage-guide tickets-list-panel" aria-labelledby="ticketListHeading">
+        <div class="tickets-section-heading"><div><p class="eyebrow">PUBLIC REQUESTS</p><h2 id="ticketListHeading">需求中心</h2></div><button id="ticketRefresh" type="button">刷新</button></div>
+        <form id="ticketSearchForm" class="ticket-search" role="search">
+          <label for="ticketSearch">搜索公开需求</label>
+          <div><input id="ticketSearch" type="search" maxlength="100" autocomplete="off" placeholder="搜索标题或问题描述"><button class="primary" type="submit">搜索</button><button id="ticketSearchClear" type="button">清除</button></div>
+        </form>
+        <div id="ticketHistory" class="ticket-list" aria-live="polite">正在加载需求...</div>
+        <nav class="ticket-pagination" aria-label="公开需求分页"><button id="ticketPrevious" type="button">上一页</button><span id="ticketPageStatus" role="status" aria-live="polite"></span><button id="ticketNext" type="button">下一页</button></nav>
+      </section>
+      <section id="ticketDetail" class="proxy-usage-guide tickets-detail-panel" aria-labelledby="ticketDetailTitle">
+        <div id="ticketDetailEmpty" class="ticket-empty">从左侧选择需求查看详情与公开回复。</div>
+        <div id="ticketDetailContent" hidden>
+          <div class="tickets-section-heading ticket-detail-heading"><div class="ticket-detail-heading-main"><p id="ticketDetailMeta" class="eyebrow"></p><div class="ticket-detail-title-row"><div id="ticketTitleStatus" class="ticket-title-status"></div><h2 id="ticketDetailTitle" class="ticket-detail-title"></h2><div id="ticketTitleControls" class="actions ticket-title-controls"></div></div></div><div id="ticketStateControls" class="actions ticket-state-controls"></div></div>
+          <div id="ticketDetailDescription" class="ticket-description"></div>
+          <p id="ticketRatingSummary" class="ticket-access" aria-live="polite"></p>
+          <form id="ticketRatingForm" class="ticket-rating-form" hidden>
+            <h3>需求评价</h3><div class="ticket-rating-stars" role="radiogroup" aria-label="评分">
+              <label title="1 星"><input type="radio" name="ticketRating" value="1" required aria-label="1 星"><span aria-hidden="true">★</span></label><label title="2 星"><input type="radio" name="ticketRating" value="2" aria-label="2 星"><span aria-hidden="true">★</span></label><label title="3 星"><input type="radio" name="ticketRating" value="3" aria-label="3 星"><span aria-hidden="true">★</span></label><label title="4 星"><input type="radio" name="ticketRating" value="4" aria-label="4 星"><span aria-hidden="true">★</span></label><label title="5 星"><input type="radio" name="ticketRating" value="5" aria-label="5 星"><span aria-hidden="true">★</span></label>
+            </div><textarea id="ticketRatingComment" rows="3" maxlength="1000" placeholder="可选：说说这次需求处理体验"></textarea><div class="actions"><button class="primary" type="submit">提交评价</button></div><p id="ticketRatingHint" class="ticket-access"></p>
+          </form>
+          <div id="ticketDetailAttachments" class="ticket-detail-attachments"></div>
+          <h3>回复时间线</h3><div id="ticketComments" class="ticket-comments" aria-live="polite"></div>
+          <form id="ticketReplyForm" class="key-management-form ticket-reply-form" hidden>
+            <label><span>补充内容</span><textarea id="ticketReply" required maxlength="4000" rows="4" placeholder="补充公开可见的信息"></textarea></label>
+            <label class="ticket-attachment-picker"><span>附件（最多 3 个，单个 5 MiB）</span><input id="ticketReplyAttachments" type="file" accept="image/*,audio/*,video/*" multiple></label>
+            <p class="ticket-attachment-warning">附件会随回复公开展示。上传前请遮盖密钥、邮箱、联系方式和其他敏感信息。</p>
+            <div id="ticketReplyAttachmentPreviews" class="ticket-attachment-previews" aria-live="polite"></div>
+            <div class="actions"><button class="primary" type="submit">提交补充</button></div>
+          </form>
+          <p id="ticketReplyHint" class="ticket-access"></p>
+        </div>
+      </section>
+    </div>
+  </main>
+  <script src="/js/nav-compat.js?v=20260824-mobile-navigation-v4"></script><script src="/js/webview-session.js?v=20260817-webview-auth-v4"></script><script src="/js/brand.js?v=20261013-requirements-plugin-v2"></script><script src="/vendor/mermaid.min.js?v=10" defer></script><script src="/js/tickets.js?v=20261104-markdown-v1" defer></script>
+</body>
+</html>

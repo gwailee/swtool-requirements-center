@@ -1,0 +1,84 @@
+name: Publish source release
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing version tag, for example v1.0.0 (source release only)
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: source-release-${{ inputs.tag }}
+  cancel-in-progress: false
+jobs:
+  source-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: requirements_test
+          POSTGRES_PASSWORD: ci-only-disposable-password
+          POSTGRES_DB: requirements_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U requirements_test -d requirements_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      RELEASE_TAG: ${{ inputs.tag }}
+      SWTOOL_TEST_DATABASE_URL: postgresql://requirements_test:ci-only-disposable-password@127.0.0.1:5432/requirements_test
+    steps:
+      - name: Validate explicit version tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9]+([.-][A-Za-z0-9]+)*)?$ ]] || {
+            echo 'Use an existing version tag such as v1.0.0 or v1.0.0-rc.1'
+            exit 1
+          }
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Confirm checkout matches tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$(git rev-parse "refs/tags/$RELEASE_TAG^{commit}")"
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.11'
+      - name: Install runtime and test dependencies
+        run: python -m pip install -r requirements.txt -r requirements-dev.txt
+      - name: Verify declared source and licenses
+        run: python scripts/verify-source.py
+      - name: Run standalone HTTP tests against PostgreSQL
+        run: python -m pytest tests -q
+      - name: Build and verify source ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          python scripts/build-source.py --output "dist/swtool-requirements-center-$RELEASE_TAG.zip"
+          cd dist
+          sha256sum --check "swtool-requirements-center-$RELEASE_TAG.zip.sha256"
+      - name: Publish source ZIP and checksum
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          gh release create "$RELEASE_TAG" \
+            "dist/swtool-requirements-center-$RELEASE_TAG.zip" \
+            "dist/swtool-requirements-center-$RELEASE_TAG.zip.sha256" \
+            --verify-tag --title "SWTool Requirements Center $RELEASE_TAG" \
+            --notes 'Source code release. Requires Python 3.11+ and PostgreSQL 14+. Includes SHA-256 consistency checksum; no signed binaries or installers.'

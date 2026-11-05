@@ -1,0 +1,27 @@
+SWTool 需求中心
+Copyright 2026 上海商江网络科技有限公司。版权所有。
+开发者：软工云（swtool.com）开发团队
+项目联系：uqtool@163.com
+
+项目自有及获得授权的源码采用 Apache License, Version 2.0。
+本声明不改变以下第三方组件及其依赖的原始许可证：
+
+KaTeX 0.16.22 — MIT
+Copyright (c) 2013-2020 Khan Academy and other contributors
+原始许可：web/vendor/katex/LICENSE；包括随附公式资源及字体。
+
+Mermaid 10.9.1 — MIT
+Copyright (c) 2014 - 2022 Knut Sveidqvist
+来源：https://github.com/mermaid-js/mermaid
+分发文件：web/vendor/mermaid.min.js；许可：web/vendor/mermaid/LICENSE。
+包含的第三方内嵌许可声明须原样保留，包括 KaTeX 0.16.9（MIT）、
+DOMPurify 3.0.9（Apache-2.0 OR MPL-2.0）、js-yaml（MIT）。
+
+@ungap/structured-clone 1.3.3 — ISC
+Copyright (c) 2021, Andrea Giammarchi, @WebReflection
+原始许可：web/vendor/structured-clone/LICENSE。
+
+嵌入依赖完整原许可及固定上游来源见 THIRD_PARTY_NOTICES.md。
+
+Python 依赖由 requirements.txt 指定，各依赖的许可与版权归其原权利人。
+第三方声明与许可证不会被项目 Apache-2.0 许可证替代。

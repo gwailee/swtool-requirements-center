@@ -1,0 +1,121 @@
+<!doctype html>
+<!--
+SPDX-License-Identifier: Apache-2.0
+Copyright (c) 2026 上海商江网络科技有限公司版权所有
+软工云（swtool.com）开发团队；uqtool@163.com
+-->
+
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <script src="./requirements-theme.js?v=20261102.1"></script>
+    <title data-brand-page-title="创建中心">创建中心</title>
+    <link rel="stylesheet" href="./style.css" />
+    <link rel="stylesheet" href="./requirements-hub.css?v=20261105.2" />
+  </head>
+  <body class="hub-body">
+    <section id="hub-auth" class="hub-auth">
+      <div class="hub-auth-theme" data-theme-control></div>
+      <form id="hub-auth-form" class="hub-auth-card">
+        <span class="hub-logo" aria-hidden="true">SW</span>
+        <p class="eyebrow">SWTool · REQUIREMENTS</p>
+        <h1>SWTool需求中心</h1>
+        <p class="muted">让每个需求都有回应</p>
+        <label
+          >用户名<input
+            name="username"
+            autocomplete="username"
+            required
+            minlength="3"
+            maxlength="80" /></label
+        ><label
+          >密码<input
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            required
+            maxlength="200"
+        /></label>
+        <p id="hub-auth-message" role="status"></p>
+        <button id="hub-login" class="primary" type="submit">登录</button
+        ><button id="hub-register" type="button">注册账号</button>
+        <p class="muted">首个注册用户成为管理员；后续账号审核通过即可登录。</p>
+      </form>
+    </section>
+    <main id="workspace" class="hub-workspace" hidden>
+      <header class="hub-header">
+        <a id="hub-home" href="./requirements-hub.html" aria-label="SWTool需求中心首页"
+          ><p class="eyebrow">SWTool · REQUIREMENTS</p>
+          <h1>创建中心</h1></a
+        >
+        <nav aria-label="工作区操作">
+          <span data-theme-control></span>
+          <span id="hub-user"></span
+          ><button id="hub-settings">创建中心</button
+          ><button id="hub-source">下载源码</button
+          ><a href="./requirements-guide.html"
+            >使用指南</a
+          ><button id="hub-plugins">插件</button><button id="hub-admin" hidden>账号管理</button
+          ><button id="hub-logout">退出</button>
+        </nav>
+      </header>
+      <p id="hub-message" role="status" aria-live="polite"></p>
+      <section id="hub-settings-panel" class="panel hub-settings-panel" hidden></section>
+      <section id="issuesPanel" hidden>
+        <div class="issue-heading hub-context">
+          <label
+            >当前需求中心<select id="hub-centers">
+              <option value="">本机需求中心</option>
+            </select></label
+          >
+          <p id="hub-identity" class="muted"></p>
+        </div>
+        <div id="hub-tools" class="hub-tools">
+          <label class="hub-search"
+            >搜索需求<input
+              id="hub-search"
+              type="search"
+              placeholder="标题、描述或标签" /></label
+          ><label
+            >状态<select id="hub-status">
+              <option value="">全部状态</option>
+              <option value="open">待处理</option>
+              <option value="in_progress">处理中</option>
+              <option value="resolved">已解决</option><option value="withdrawn">已撤回</option>
+            </select></label
+          ><button id="hub-refresh">查询</button
+          ><button id="hub-new" class="primary">新增需求</button>
+          <div id="hub-archive" hidden>
+            <button id="hub-archive-menu">导入，导出</button
+            ><input id="hub-import-file" type="file" accept=".zip" hidden />
+          </div>
+        </div>
+        <div class="hub-grid">
+          <section class="panel">
+            <ol id="hub-list" class="hub-list"></ol>
+            <div class="hub-pagination">
+              <button id="hub-prev">上一页</button><span id="hub-page"></span
+              ><button id="hub-next">下一页</button>
+            </div>
+          </section>
+          <section id="hub-detail" class="panel hub-detail">
+            <p class="muted">请选择需求</p>
+          </section>
+        </div>
+      </section>
+    </main>
+    <dialog id="hub-dialog">
+      <header>
+        <h2 id="hub-dialog-title"></h2>
+        <button id="hub-dialog-close" aria-label="关闭对话框">关闭</button>
+      </header>
+      <div id="hub-dialog-body"></div>
+    </dialog>
+    <script src="./requirements-actions.js?v=20261023.1"></script>
+    <link rel="stylesheet" href="./plugin-manager.css?v=20261023.1"><script src="./plugin-manager.js?v=20261023.1"></script><script src="./requirements-host.js?v=20261102.8"></script><script src="./requirements-hub.js?v=20261105-ticket-relations-v1"></script>
+    <script src="./requirements-center.js?v=20261025.1"></script>
+    <script src="./requirements-hub-loader.js?v=20261025.1"></script>
+  </body>
+</html>

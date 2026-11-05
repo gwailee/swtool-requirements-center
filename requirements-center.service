@@ -1,0 +1,20 @@
+[Unit]
+Description=SWTool Requirements Center
+After=network-online.target postgresql.service
+Wants=network-online.target
+[Service]
+Type=simple
+User=requirements
+Group=requirements
+WorkingDirectory=/srv/requirements-center
+EnvironmentFile=/srv/requirements-center/service.env
+Environment=SWTOOL_REQUIREMENTS_STANDALONE=1
+Environment=SWTOOL_DATA_DIR=/srv/requirements-center/data
+ExecStart=/srv/requirements-center/.venv/bin/python -m uvicorn standalone:app --host 127.0.0.1 --port 8080
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+[Install]
+WantedBy=multi-user.target

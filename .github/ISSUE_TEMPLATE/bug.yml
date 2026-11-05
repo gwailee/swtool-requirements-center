@@ -1,0 +1,31 @@
+name: 缺陷报告
+description: 提供可复现的问题，勿提交真实 Key 或用户数据
+title: '[Bug] '
+body:
+  - type: markdown
+    attributes:
+      value: '请先移除 Key、密码、邮箱、IP 与用户数据。安全漏洞请使用 SECURITY.md 私密渠道。开发团队：软工云（swtool.com）；项目联系：uqtool@163.com。'
+  - type: input
+    id: version
+    attributes:
+      label: 版本与运行环境
+      description: Git 标签或提交、Python/PostgreSQL 版本及操作系统
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 最小复现步骤
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: 预期与实际结果
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: 已去敏感的日志或截图
+      description: 不需要也不要提供真实个人 Key

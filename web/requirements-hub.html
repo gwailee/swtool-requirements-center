@@ -1,0 +1,219 @@
+<!doctype html>
+<!--
+SPDX-License-Identifier: Apache-2.0
+Copyright (c) 2026 上海商江网络科技有限公司版权所有
+软工云（swtool.com）开发团队；uqtool@163.com
+-->
+
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <script src="/plugins/requirements-center/standalone/web/requirements-theme.js?v=20261102.1"></script>
+    <title data-brand-page-title="需求中心">SWTool需求中心</title>
+    <link rel="stylesheet" href="/css/styles.css?v=20261102-requirements-shell" />
+    <link rel="stylesheet" href="/plugins/requirements-center/standalone/web/style.css" />
+    <link rel="stylesheet" href="/plugins/requirements-center/standalone/web/requirements-hub.css?v=20261105.2" />
+    <style>.hub-header #hub-user{margin-left:auto;order:10}.hub-header #hub-logout{order:11}.hub-workspace { width: min(1280px, calc(100% - 48px)); max-width: 1280px; padding: 28px 24px 56px !important; }
+.hub-header { min-height: 72px; gap: 18px; border-bottom: 1px solid var(--hub-border); }
+#hub-home { display: flex; align-items: center; gap: 14px; min-width: 0; }
+#hub-home > img { width: auto; min-width: 50px; max-width: 112px; height: clamp(50px, 4vw, 64px); flex: 0 0 auto; object-fit: contain; border-radius: 10px; }
+#hub-home .eyebrow { margin: 0 0 5px; }
+#hub-home h1 { font-size: clamp(24px, 3vw, 34px); line-height: 1; }
+.hub-context { margin-bottom: 16px; }
+.hub-tools { gap: 12px; margin: 16px 0; }
+.hub-grid { gap: 16px; }
+.hub-list button strong, .ticket-gantt-title { display: block; min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hub-body .ticket-milestones { padding: 24px; }
+.hub-body .ticket-milestones .section-title { margin-bottom: 16px; }
+.hub-body .ticket-milestone-tabs { margin-bottom: 14px; }
+.hub-body #ticketMilestonesSummary { margin: 0 0 14px; }
+.hub-body .ticket-milestones-viewport { margin-bottom: 14px; }
+.hub-body .ticket-milestone-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.hub-body .ticket-milestone-footer p { margin: 0; min-width: 0; }
+.hub-body #ticketMilestoneNewIssue { display: inline-flex; flex: 0 0 auto; white-space: nowrap; }
+@media (max-width: 760px) {
+  .hub-workspace { width: 100%; padding: 12px 12px 40px !important; }
+  .hub-header { align-items: flex-start; flex-direction: column; gap: 12px; padding-bottom: 16px; }
+  .hub-header nav.actions { width: 100%; align-items: stretch; }
+  .hub-header nav.actions > * { flex: 1 1 auto; }
+  .hub-header nav.actions #hub-user { flex: 1 1 100%; order: -1; margin-left: 0; }
+  .hub-context { grid-template-columns: 1fr; }
+  .hub-body .ticket-milestones { padding: 14px; }
+  .hub-body .ticket-milestone-footer { align-items: stretch; flex-direction: column; }
+  .hub-body #ticketMilestoneNewIssue { width: 100%; justify-content: center; }
+  .hub-tools { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .hub-tools .hub-search, .hub-tools button#hub-new, .hub-tools > div { grid-column: 1 / -1; }
+  .hub-grid { grid-template-columns: 1fr; }
+  .hub-body .ticket-milestones-viewport { overflow-x: auto; }
+  .hub-body .ticket-milestones-viewport:not(.is-gantt) { overflow-x: auto; }
+}
+@media (max-width: 760px) {
+  .hub-header nav.actions { position: relative; display: flex; align-items: center; gap: 8px; width: 100%; }
+  .hub-header nav.actions > [data-theme-control] { flex: 1 1 auto; min-width: 0; }
+  .hub-mobile-nav { position: relative; display: block; flex: 0 0 auto; }
+  .hub-mobile-nav > summary { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; padding: 0 13px; border: 1px solid var(--hub-border); border-radius: 10px; color: var(--hub-ink); cursor: pointer; list-style: none; }
+  .hub-mobile-nav > summary::-webkit-details-marker { display: none; }
+  .hub-mobile-nav-menu { position: absolute; z-index: 20; top: calc(100% + 8px); right: 0; display: grid; min-width: 168px; gap: 6px; padding: 8px; border: 1px solid var(--hub-border); border-radius: 10px; background: var(--hub-card); box-shadow: 0 14px 32px rgb(0 0 0 / 35%); }
+  .hub-mobile-nav-menu button, .hub-mobile-nav-menu a { display: flex; align-items: center; min-height: 40px; width: 100%; padding: 0 11px; border: 1px solid transparent; border-radius: 7px; color: var(--hub-ink); background: transparent; text-decoration: none; text-align: left; }
+  .hub-mobile-nav-menu button:hover, .hub-mobile-nav-menu a:hover { border-color: var(--hub-accent); color: var(--hub-accent); }
+  .hub-header nav.actions #hub-user { flex: 0 1 auto; order: 0; margin-left: 0; }
+  .hub-header nav.actions #hub-logout { flex: 0 0 auto; order: 0; }
+}
+@media (min-width: 761px) { .hub-mobile-nav { display: none; } }
+@media (max-width: 760px) {
+  .hub-list li .hub-detail-inline { display: block; width: 100%; margin-top: 10px; padding: 14px; border: 1px solid var(--hub-border); border-radius: 12px; background: var(--hub-card); box-sizing: border-box; }
+  .hub-list li .hub-detail-inline h2 { font-size: 20px; }
+}
+</style>
+  <link rel="stylesheet" href="/plugins/requirements-center/standalone/web/ticket-content.css?v=20261104.4"><script src="/plugins/requirements-center/standalone/web/ticket-content.js?v=20261104.1"></script></head>
+  <body class="hub-body">
+    <section id="hub-auth" class="hub-auth">
+      <div class="hub-auth-theme" data-theme-control></div>
+      <form id="hub-auth-form" class="hub-auth-card">
+        <span class="hub-logo" aria-hidden="true">SW</span>
+        <p class="eyebrow">SWTool · REQUIREMENTS</p>
+        <h1>SWTool需求中心</h1>
+        <p class="muted">让每个需求都有回应</p>
+        <label
+          >用户名<input
+            name="username"
+            autocomplete="username"
+            required
+            minlength="3"
+            maxlength="80" /></label
+        ><label
+          >密码<input
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            required
+            maxlength="200"
+        /></label>
+        <p id="hub-auth-message" role="status"></p>
+        <button id="hub-login" class="primary" type="submit">登录</button
+        ><button id="hub-register" type="button">注册账号</button>
+        <p class="muted">首个注册用户成为管理员；后续账号审核通过即可登录。</p>
+      </form>
+    </section>
+    <main id="workspace" class="hub-workspace" hidden>
+      <header class="hub-header masthead">
+        <a id="hub-home" class="site-brand" href="/" aria-label="返回 SWTool 首页"
+          ><img data-brand-logo src="/assets/brand/logo.jpg" alt="SWTOOL Cloud" /><div><p class="eyebrow">SWTool · REQUIREMENTS</p>
+          <h1>需求驱动中心</h1></div></a
+        >
+        <nav class="actions" aria-label="工作区操作">
+          <span data-theme-control></span>
+          <span id="hub-user"></span
+          ><button id="hub-settings">创建中心</button
+          ><button id="hub-source">下载源码</button
+          ><a href="/plugins/requirements-center/standalone/web/requirements-guide.html"
+            >使用指南</a
+          ><button id="hub-plugins">插件</button><button id="hub-admin" hidden>账号管理</button
+          ><button id="hub-logout">退出</button>
+        </nav>
+      </header>
+      <p id="hub-message" role="status" aria-live="polite"></p>
+      <section id="hub-settings-panel" class="panel hub-settings-panel" hidden></section>
+      <section id="issuesPanel">
+        <div class="issue-heading hub-context">
+          <label
+            >当前需求中心<select id="hub-centers">
+              <option value="">本机需求中心</option>
+            </select></label
+          >
+          <p id="hub-identity" class="muted"></p>
+        </div>
+        <button id="hub-driver-toggle" class="hub-driver-toggle" type="button" hidden aria-expanded="false">展开工单驱动</button>
+        <section id="hub-driver-panel" class="panel hub-driver-panel" hidden aria-labelledby="hub-driver-title">
+          <div class="hub-driver-heading">
+            <div class="hub-driver-title-group"><span class="hub-driver-kicker">SWTOOL CLI</span><h2 id="hub-driver-title">工单驱动</h2><p id="hub-driver-reason" class="muted" role="status"></p></div>
+            <span id="hub-driver-state" class="hub-driver-state">不可用</span>
+          </div>
+          <div class="hub-driver-controls">
+            <label class="hub-driver-cli-field">CLI<select id="hub-driver-cli"><option value="swtool">SWTOOL</option></select></label>
+            <label class="hub-driver-target-field">SSH 目标<select id="hub-driver-target"><option value="">尚未配置执行目标</option></select></label>
+            <label class="hub-driver-workspace-field">项目目录<input id="hub-driver-workspace" type="text" autocomplete="off" placeholder="/home/user/project"></label>
+            <label class="hub-driver-runtime-field">时限（秒，0 为不限）<input id="hub-driver-runtime" type="number" min="0" max="31536000" step="1" value="0"></label>
+            <label class="hub-driver-startup-field">启动提示语 <span>最多 8 KiB</span><textarea id="hub-driver-startup-prompt" rows="3" maxlength="8192" placeholder="处理当前工单并持续更新进度。"></textarea></label>
+            <label class="hub-driver-checkpoint-field">继续与检查点提示语 <span>最多 8 KiB</span><textarea id="hub-driver-completion-prompt" rows="3" maxlength="8192" placeholder="继续完成当前工单，记录过程并更新里程碑。"></textarea></label>
+          </div>
+          <div class="hub-driver-actionbar">
+            <div class="hub-driver-target-actions">
+              <button id="hub-driver-add-ssh" type="button">添加 SSH</button>
+              <button id="hub-driver-delete-ssh" type="button" disabled>删除 SSH</button>
+              <button id="hub-driver-host-key" type="button">确认主机指纹</button>
+            </div>
+            <div class="hub-driver-run-actions">
+              <button id="hub-driver-start" class="primary" type="button" disabled>启动</button>
+              <button id="hub-driver-stop" type="button" disabled>手动停止</button>
+              <button id="hub-driver-resume" type="button" disabled>恢复运行</button>
+            </div>
+          </div>
+          <div class="hub-driver-meta"><p id="hub-driver-retry" class="muted">每 60 秒检测；单工单最多重试 3 次，全局最多 10 次；总工单数与连续时长默认不限。</p><p id="hub-driver-billing" class="muted"></p><span>仅创建者可启动或干预</span></div>
+          <div class="hub-driver-workarea">
+            <section class="hub-driver-log" aria-labelledby="hub-driver-log-title">
+              <div class="hub-driver-log-heading"><h3 id="hub-driver-log-title">实时输出</h3><span id="hub-driver-log-meta" class="muted" role="status">等待日志</span></div>
+              <pre id="hub-driver-log-output" tabindex="0" role="log" aria-live="off" aria-label="CLI 会话输出"></pre>
+              <form id="hub-driver-interject-form" class="hub-driver-interject" autocomplete="off">
+                <label for="hub-driver-interject-text">向当前 SWTOOL CLI 会话插话</label>
+                <textarea id="hub-driver-interject-text" rows="2" maxlength="8192" placeholder="补充说明或调整当前工单的处理方向" disabled></textarea>
+                <div><span id="hub-driver-interject-status" role="status" class="muted">等待活动工单</span><button id="hub-driver-interject-send" type="submit" disabled>发送</button></div>
+              </form>
+            </section>
+            <aside class="hub-driver-progress" aria-labelledby="hub-driver-progress-title" aria-live="polite">
+              <div class="hub-driver-progress-heading"><h3 id="hub-driver-progress-title">工单进度</h3><span id="hub-driver-progress-meta" class="muted">同步中</span></div>
+              <div id="hub-driver-progress-list" class="hub-driver-progress-list"><p class="muted">正在读取工单…</p></div>
+            </aside>
+          </div>
+        </section>
+        <div id="hub-tools" class="hub-tools">
+          <label class="hub-search"
+            >搜索需求<input
+              id="hub-search"
+              type="search"
+              placeholder="标题、描述或标签" /></label
+          ><label
+            >状态<select id="hub-status">
+              <option value="">全部状态</option>
+              <option value="pending">待审核</option>
+              <option value="open">待解决</option>
+              <option value="in_progress">处理中</option>
+              <option value="resolved">已解决</option><option value="withdrawn">回收站</option>
+            </select></label
+          ><button id="hub-refresh">查询</button
+          ><button id="hub-new" class="primary" hidden>新增需求</button>
+          <div id="hub-archive" hidden>
+            <button id="hub-archive-menu">导入导出</button
+            ><input id="hub-import-file" type="file" accept=".zip" hidden />
+          </div>
+        </div>
+        <div class="hub-grid">
+          <section class="panel hub-list-panel">
+            <ol id="hub-list" class="hub-list"></ol>
+            <div class="hub-pagination">
+              <button id="hub-prev">上一页</button><span id="hub-page"></span
+              ><button id="hub-next">下一页</button>
+            </div>
+          </section>
+          <section id="hub-detail" class="panel hub-detail">
+            <p class="muted">请选择需求</p>
+          </section>
+        </div>
+      </section>
+    </main>
+    <dialog id="hub-dialog">
+      <header>
+        <h2 id="hub-dialog-title"></h2>
+        <button id="hub-dialog-close" aria-label="关闭对话框">关闭</button>
+      </header>
+      <div id="hub-dialog-body"></div>
+    </dialog>
+    <script src="/js/brand.js?v=20261102-requirements-shell"></script>
+    <script src="/plugins/requirements-center/standalone/web/requirements-actions.js?v=20261023.1"></script>
+    <link rel="stylesheet" href="/plugins/requirements-center/standalone/web/plugin-manager.css?v=20261023.1"><script src="/plugins/requirements-center/standalone/web/plugin-manager.js?v=20261023.1"></script><script src="/plugins/requirements-center/standalone/web/requirements-host.js?v=20261102.8"></script><script src="/plugins/requirements-center/standalone/web/requirements-hub.js?v=20261105-ticket-relations-v1"></script>
+    <script src="/plugins/requirements-center/standalone/web/requirements-center.js?v=20261102.4"></script>
+    <script src="/plugins/requirements-center/standalone/web/requirements-hub-loader.js?v=20261102.2"></script>
+  </body>
+</html>

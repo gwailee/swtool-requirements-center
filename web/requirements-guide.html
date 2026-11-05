@@ -1,0 +1,68 @@
+<!doctype html>
+<!--
+SPDX-License-Identifier: Apache-2.0
+Copyright (c) 2026 上海商江网络科技有限公司版权所有
+软工云（swtool.com）开发团队；uqtool@163.com
+-->
+
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <script src="./vendor/mermaid-compat.js?v=20261026.1"></script>
+    <script src="./requirements-theme.js?v=20261102.1"></script>
+    <title data-brand-page-title="需求中心 · 用户与部署指南">SWTool需求中心 · 用户与部署指南</title>
+    <link rel="stylesheet" href="./requirements-hub.css?v=20261026.4" />
+    <link rel="stylesheet" href="./vendor/katex/katex.min.css" />
+    <style>
+      main {
+        max-width: 1000px;
+        margin: auto;
+        padding: 24px;
+      }
+      .guide-document {
+        background: var(--hub-card);
+        padding: 30px;
+        border-radius: 18px;
+      }
+      .mermaid {
+        overflow: auto;
+        margin: 24px 0;
+      }
+      .mermaid svg {
+        max-width: none !important;
+      }
+      pre {
+        padding: 16px;
+        background: var(--hub-bg);
+        overflow: auto;
+      }
+      .formula {
+        overflow: auto;
+        padding: 12px;
+      }
+      .guide-tools,
+      .guide-tools-actions {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin-bottom: 24px;
+      }
+    </style>
+  </head>
+  <body class="hub-body">
+    <main>
+      <nav class="guide-tools">
+        <span class="guide-tools-actions">
+        <span data-theme-control></span>
+        <a href="./requirements-hub.html">SWTool需求中心 · 首页</a
+        ><a href="./requirements-guide.md" download>下载 Markdown 指南</a>
+        </span>
+      </nav>
+      <p id="guide-status" role="status">正在加载指南…</p>
+      <article id="guide-document" class="guide-document"></article>
+    </main>
+    <script src="./vendor/katex/katex.min.js"></script>
+    <script src="./requirements-guide-loader.js?v=20261026.6"></script>
+  </body>
+</html>

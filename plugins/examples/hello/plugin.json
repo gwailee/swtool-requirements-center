@@ -1,0 +1,8 @@
+{
+  "name": "hello-plugin",
+  "displayName": "插件示例",
+  "version": "1.0.0",
+  "description": "Python API + HTML/JS，无需重启激活",
+  "providerEntry": "backend.py:router",
+  "frontendEntry": "index.html"
+}

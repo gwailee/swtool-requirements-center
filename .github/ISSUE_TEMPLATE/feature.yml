@@ -1,0 +1,23 @@
+name: 功能建议
+description: 描述使用场景与验收条件
+title: '[Feature] '
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 希望解决的问题
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: 建议行为与验收条件
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 已尝试的方式与替代方案
+  - type: markdown
+    attributes:
+      value: '勿附真实 Key、密码或用户数据。软工云（swtool.com）开发团队；联系：uqtool@163.com。'

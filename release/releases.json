@@ -1,0 +1,27 @@
+{
+  "format": 1,
+  "current_version": "1.3.1",
+  "releases": [
+    {
+      "platform": "source",
+      "version": "1.3.1",
+      "released_at": "2026-10-26",
+      "features": ["远端按 Key 权限编辑与回复并支持附件", "提供 API 与 Key 使用指南", "支持黑色、白色与高对比主题", "随包提供本地 Mermaid 兼容资源", "修复远端大列表与附件读取限制", "统一互通甘特图与插件样式", "修复独立版本新个人 Key 鉴权"],
+      "notes": "下载后请按使用指南在新目录部署，不会自动替换当前运行目录。",
+      "url": "https://swtool.com/plugins/requirements-center/api/tools/source",
+      "sha256": null,
+      "size": null
+    },
+    {
+      "platform": "source",
+      "version": "1.3.0",
+      "released_at": "2026-10-25",
+      "features": ["需求中心支持本机与远端需求互通", "支持页面在线检查版本并手动下载源码包"],
+      "notes": "下载后请按使用指南在新目录部署，不会自动替换当前运行目录。",
+      "url": "https://swtool.com/plugins/requirements-center/api/tools/source",
+      "sha256": null,
+      "size": null,
+      "signature": null
+    }
+  ]
+}

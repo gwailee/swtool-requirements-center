@@ -1,0 +1,6 @@
+/*
+SPDX-License-Identifier: Apache-2.0
+Copyright (c) 2026 上海商江网络科技有限公司版权所有
+软工云（swtool.com）开发团队；uqtool@163.com
+*/
+.plugin-row{display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding:16px 0;border-bottom:1px solid var(--hub-border,var(--line,#888))}.plugin-row p{flex-basis:100%;margin:0}.plugin-row a,.plugin-row button{min-height:44px;display:inline-flex;align-items:center}.plugin-upload{display:flex;align-items:end;gap:12px;flex-wrap:wrap;margin:16px 0}.plugin-upload label{display:grid;gap:8px}.plugin-upload input{max-width:100%}
