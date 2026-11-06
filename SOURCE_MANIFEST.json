@@ -144,8 +144,8 @@
     },
     {
       "path": "release/releases.json",
-      "size": 1832,
-      "sha256": "b2e17596ae8e480980e2af0755676f0c81185422942e3f47c5fcc5527f115ae5"
+      "size": 1931,
+      "sha256": "55c29a9f9fca610cd8f54f48cd2f690c25184127eb98d22a7bd80ff81f72541c"
     },
     {
       "path": "web/index.html",
@@ -841,8 +841,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "size": 1100,
-      "sha256": "44c22f667e300fa8b46b256196109c75f0a9f2c2a6f34396dcdba93134ddc213"
+      "size": 1087,
+      "sha256": "786af7548584761cd2da95606180f910acf75fcd03bbae18c3c1551c946a5d02"
     },
     {
       "path": "CODE_OF_CONDUCT.md",
