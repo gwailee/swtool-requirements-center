@@ -1,7 +1,23 @@
 {
   "format": 1,
-  "current_version": "1.3.1",
+  "current_version": "1.3.6",
   "releases": [
+    {
+      "platform": "source",
+      "version": "1.3.6",
+      "released_at": "2026-11-06",
+      "features": [
+        "统一插件、独立版与源码 ZIP 产品版本来源及递增规则",
+        "管理员工单排序与父子树关系",
+        "工单详情父子关系图折叠",
+        "父子关系图打开加载反馈",
+        "父子关系调整保存结果反馈"
+      ],
+      "notes": "发布准备，尚未发布；正式版本以同版 GitHub 标签及验收回执为准。",
+      "url": "https://swtool.com/plugins/requirements-center/api/tools/source",
+      "sha256": null,
+      "size": null
+    },
     {
       "platform": "source",
       "version": "1.3.1",

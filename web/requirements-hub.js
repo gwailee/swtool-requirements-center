@@ -719,6 +719,7 @@ function safe(handler) {
 }
 function resetDetail() {
   const detail = el("hub-detail");
+  detail?.removeAttribute("aria-busy");
   clearPendingImagePastes(detail);
   hub.urls.forEach((url) => URL.revokeObjectURL(url));
   hub.urls = [];
@@ -1060,16 +1061,32 @@ async function loadList() {
   if (detail && home && detail.parentElement !== home) home.append(detail);
   list.replaceChildren();
   hub.currentItems = Array.isArray(data.items) ? data.items : [];
+  const visibleById = new Map(hub.currentItems.map((item) => [String(item.id), item]));
+  const visibleDepth = (item) => {
+    let depth = 0, parentId = item.parent_ticket_id || item.metadata?.parent_ticket_id || item.parent_ticket?.id, seen = new Set([String(item.id)]);
+    while (parentId && depth < 8) {
+      const key = String(parentId);
+      if (seen.has(key)) break;
+      seen.add(key);
+      if (!visibleById.has(key)) { depth++; break; }
+      const parent = visibleById.get(key);
+      depth++; parentId = parent.parent_ticket_id || parent.metadata?.parent_ticket_id || parent.parent_ticket?.id;
+    }
+    return depth;
+  };
   updateSortControls();
   for (const [itemIndex, item] of hub.currentItems.entries()) {
     const li = document.createElement("li"),
       button = document.createElement("button");
     button.dataset.ticketId = item.id;
+    const depth = visibleDepth(item);
+    button.dataset.depth = String(depth);
+    if (depth) button.classList.add("hub-child-ticket");
     button.title = item.title || "未命名需求";
     button.setAttribute("aria-pressed", String(item.id === hub.selected));
     button.innerHTML =
       "<strong>" +
-      esc(item.title) +
+      (depth ? "↳ " : "") + esc(item.title) +
       '</strong><span class="hub-status ' +
       esc(item.status) +
       '">' +
@@ -1082,7 +1099,7 @@ async function loadList() {
     const titleNode = button.querySelector("strong");
     if (titleNode) {
       titleNode.draggable = canSortTickets() && !hub.sorting;
-      if (canSortTickets()) button.setAttribute("aria-label", `${item.title || "未命名需求"}，拖动标题或按 Alt 加上下方向键排序`);
+      button.setAttribute("aria-label", `${depth ? "子工单，" : "工单，"}${item.title || "未命名需求"}${canSortTickets() ? "，拖动标题或按 Alt 加上下方向键排序" : ""}`);
       titleNode.addEventListener("dragstart", (event) => { if (!canSortTickets() || hub.sorting || listRequestSeq !== hub.listRequestSeq || contextGeneration !== hub.generation || contextCenter !== hub.center || contextLocal !== (hub.localCenter?.id || "")) { event.preventDefault(); return; } hub.dragTicket = {id: String(item.id), generation: contextGeneration, center: contextCenter, local: contextLocal, listSeq: listRequestSeq}; event.dataTransfer?.setData("text/plain", String(item.id)); });
       titleNode.addEventListener("dragover", (event) => { const drag = hub.dragTicket; if (!drag || drag.id === String(item.id) || drag.generation !== hub.generation || drag.center !== hub.center || drag.local !== (hub.localCenter?.id || "") || drag.listSeq !== hub.listRequestSeq) return; event.preventDefault(); titleNode.classList.add("hub-sort-target"); });
       titleNode.addEventListener("dragleave", () => titleNode.classList.remove("hub-sort-target"));
@@ -1258,14 +1275,30 @@ async function purgeTicket(item) {
 
 async function openTicket(id) {
   const detailGeneration = hub.generation, detailCenter = hub.center, detailLocal = hub.localCenter?.id || "";
+  const detailRequest = (hub.detailRequestSeq = (hub.detailRequestSeq || 0) + 1);
   hub.selected = id;
   updateSortControls();
-  const item = await api("/api/tickets/" + encodeURIComponent(id));
-  if (hub.selected !== id || detailGeneration !== hub.generation || detailCenter !== hub.center || detailLocal !== (hub.localCenter?.id || "")) return;
+  const detail = el("hub-detail");
+  const requestCurrent = () => detailRequest === hub.detailRequestSeq && hub.selected === id && detailGeneration === hub.generation && detailCenter === hub.center && detailLocal === (hub.localCenter?.id || "");
+  resetDetail();
+  detail.setAttribute("aria-busy", "true");
+  detail.innerHTML = '<p class="hub-detail-loading" role="status">正在加载需求…</p>';
+  placeMobileDetail();
+  let item;
+  try { item = await api("/api/tickets/" + encodeURIComponent(id)); }
+  catch (error) {
+    if (requestCurrent()) {
+      detail.removeAttribute("aria-busy");
+      detail.innerHTML = '<p class="hub-detail-error" role="status">需求加载失败，请重试。</p>';
+    }
+    if (!requestCurrent()) return;
+    throw error;
+  }
+  if (detailRequest !== hub.detailRequestSeq || hub.selected !== id || detailGeneration !== hub.generation || detailCenter !== hub.center || detailLocal !== (hub.localCenter?.id || "")) return;
+  detail.removeAttribute("aria-busy");
   resetDetail();
   driverTicket = item;
   refreshDriverPanel();
-  const detail = el("hub-detail");
   detail.innerHTML =
     '<div class="hub-ticket-heading"><div id="hub-title-status" class="hub-title-status"></div><h2>' +
     esc(item.title) +
@@ -1288,8 +1321,17 @@ async function openTicket(id) {
   const relationNavigate = (targetId) => { if (relationCurrent()) safe(() => openTicket(targetId))(); };
   const relations = renderTicketRelations(item, relationNavigate);
   if (relations) {
-    detail.querySelector(".hub-ticket-heading").after(relations);
-    window.SwtoolTicketContent?.renderRelations?.(relations.querySelector(".ticket-relation-diagram"), item, {navigate: relationNavigate, isCurrent: relationCurrent});
+    const disclosure = document.createElement("details");
+    disclosure.className = "ticket-relations-disclosure";
+    const summary = document.createElement("summary"); summary.textContent = "工单关系";
+    disclosure.append(summary, relations);
+    detail.querySelector(".hub-description").after(disclosure);
+    disclosure.addEventListener("toggle", () => {
+      if (disclosure.open && !disclosure.dataset.rendered) {
+        window.SwtoolTicketContent?.renderRelations?.(relations.querySelector(".ticket-relation-diagram"), item, {navigate: relationNavigate, isCurrent: relationCurrent});
+        disclosure.dataset.rendered = "true";
+      }
+    });
   }
   placeMobileDetail();
   if (item.reproduction_steps) {
@@ -1669,7 +1711,10 @@ async function editForm(item = null) {
   form.onsubmit = async (event) => {
     event.preventDefault();
     const button = form.querySelector('button[type="submit"]');
+    const message = el("hub-editor-message");
+    if (button.disabled) return;
     button.disabled = true;
+    if (message) message.textContent = "正在保存…";
     try {
       if (editorContext !== currentEditorContext()) throw Error("中心已切换，请重新打开创建表单。");
       if (!String(form.elements.namedItem("description").value || "").trim()) {
@@ -1720,6 +1765,7 @@ async function editForm(item = null) {
       savedStatus = result.status;
       await editorImages.submit((id, files, commentId) => upload(id, files, commentId, ticketApi), result.id, [...form.elements.namedItem("files").files]);
       if (editorContext !== currentEditorContext()) return;
+      if (message) message.textContent = "保存成功，正在刷新…";
       closeDialog();
       hub.selected = result.id;
       if (!item) {
@@ -1728,9 +1774,13 @@ async function editForm(item = null) {
         hub.page = 1;
         hub.justCreated = {id: String(result.id), title: String(result.title || data.title || ""), generation: hub.generation, center: hub.center, local: hub.localCenter?.id || ""};
       }
-      await loadList();
+      try {
+        await loadList();
+        if (editorContext !== currentEditorContext()) return;
+        await openTicket(result.id);
+      }
+      catch (refreshError) { notify("已保存，但刷新失败；请手动刷新查看。", "error"); return; }
       if (editorContext !== currentEditorContext()) return;
-      await openTicket(result.id);
       window.SWToolRequirementsMilestones?.load();
       notify("需求已保存");
     } catch (error) {

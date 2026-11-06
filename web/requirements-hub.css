@@ -1039,3 +1039,7 @@ html[data-theme="contrast"] .hub-body .hub-list button[aria-pressed="true"]{outl
 /* Ticket detail presentation and attachment preview styles. */
 
 #hub-created-ticket{min-width:0;max-width:100%;overflow-wrap:anywhere}#hub-created-ticket button{max-width:100%;min-height:44px;white-space:normal;overflow-wrap:anywhere}
+
+.ticket-relations-disclosure{margin:16px 0;border:1px solid var(--hub-border);border-radius:8px;min-width:0}.ticket-relations-disclosure>summary{padding:12px;min-height:44px;box-sizing:border-box;cursor:pointer;font-weight:600}.ticket-relations-disclosure>summary:focus-visible{outline:2px solid currentColor;outline-offset:2px}.ticket-relations-disclosure .ticket-relations{margin:0;border:0}.hub-detail-loading,.hub-detail-error{padding:16px;overflow-wrap:anywhere}
+
+#hub-list .hub-child-ticket{padding-inline-start:24px;border-inline-start:2px solid var(--hub-border);min-width:0;overflow-wrap:anywhere}#hub-list .hub-child-ticket[data-depth="2"]{padding-inline-start:36px}#hub-list .hub-child-ticket[data-depth="3"]{padding-inline-start:44px}

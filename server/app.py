@@ -5831,6 +5831,28 @@ def _issue_view(con, issue_id, user):
         result["case_id"] = anonymized_case(result["case_id"])
     return result
 
+def _ordered_issue_page_sql(clause):
+    # Only the already visible/search-filtered set participates; no hidden parents.
+    return """WITH RECURSIVE ranked AS (
+        SELECT issues.*, row_number() OVER (ORDER BY manual_order ASC NULLS LAST,
+            CASE status WHEN 'in_progress' THEN 0 WHEN 'open' THEN 1 WHEN 'pending' THEN 2 ELSE 3 END,
+            updated_at DESC,id DESC) AS sort_rank FROM issues""" + clause + """
+    ), tree(id,sort_path) AS (
+        SELECT e.id,ARRAY[e.sort_rank] FROM ranked e WHERE NOT EXISTS (
+            SELECT 1 FROM ranked p WHERE p.id=e.parent_ticket_id AND p.id<>e.id
+            AND p.manual_order IS NOT DISTINCT FROM e.manual_order)
+        UNION ALL
+        SELECT e.id,t.sort_path || e.sort_rank FROM tree t JOIN ranked p ON p.id=t.id
+            JOIN ranked e ON e.parent_ticket_id=p.id
+            AND e.manual_order IS NOT DISTINCT FROM p.manual_order
+            WHERE NOT e.sort_rank=ANY(t.sort_path)
+    ), paths AS (
+        SELECT * FROM tree UNION ALL
+        SELECT e.id,ARRAY[e.sort_rank] FROM ranked e WHERE NOT EXISTS (SELECT 1 FROM tree t WHERE t.id=e.id)
+    ) SELECT e.id,e.title,e.description,e.labels,e.case_id,e.status,e.author_id,e.created_at,e.updated_at,e.expected_resolution_at,e.resolved_at,e.manual_order,e.parent_ticket_id
+      FROM ranked e JOIN paths p ON p.id=e.id ORDER BY p.sort_path LIMIT ? OFFSET ?"""
+
+
 @app.get("/issues")
 def list_issues(page: int = 1, page_size: int = 20, search: str = "", status: str = "", user=Depends(current_issue_user)):
     _requirements_guard()
@@ -5841,7 +5863,7 @@ def list_issues(page: int = 1, page_size: int = 20, search: str = "", status: st
     else: where.append("status!='withdrawn'")
     if search: where.append("(title LIKE ? OR description LIKE ?)"); params.extend([f"%{search}%", f"%{search}%"])
     clause = (" WHERE " + " AND ".join(where)) if where else ""; total = con.execute("SELECT COUNT(*) FROM issues"+clause, params).fetchone()[0]
-    rows = con.execute("SELECT * FROM issues"+clause+" ORDER BY manual_order ASC NULLS LAST, updated_at DESC LIMIT ? OFFSET ?", params+[page_size,(page-1)*page_size]).fetchall(); con.close()
+    rows = con.execute(_ordered_issue_page_sql(clause), params+[page_size,(page-1)*page_size]).fetchall(); con.close()
     items = []
     for row in rows:
         item = dict(row) | {"labels": json.loads(row["labels"] or "[]")}
@@ -6019,7 +6041,7 @@ def _ticket_timestamp(value):
 def requirements_plugin_info():
     con = db(); active = _requirements_enabled(con); con.close()
     installed = plugin_runtime.state().get(REQUIREMENTS_PLUGIN) if globals().get('plugin_runtime') else None
-    version = installed["manifest"]["version"] if installed else "1.3.0"
+    version = installed["manifest"]["version"] if installed else _requirements_release_version()
     return {"name": REQUIREMENTS_PLUGIN, "displayName": "需求中心", "version": version, "installed": True,
             "active": active, "frontendVisible": active, "providerEntry": "server/app.py",
             "interoperability": {"api": "/api/tickets", "legacyApi": "/issues", "sharedStorage": "issues"}}
@@ -6030,7 +6052,7 @@ def list_plugins(user=Depends(current_user)):
     con = db(); active = _requirements_enabled(con); con.close()
     items = plugin_runtime.items() if globals().get('plugin_runtime') else []
     if not any(item["name"] == REQUIREMENTS_PLUGIN for item in items):
-        items.insert(0, {"name": REQUIREMENTS_PLUGIN, "displayName": "需求中心", "version": "1.3.0", "active": active, "installed": True, "hotReload": True})
+        items.insert(0, {"name": REQUIREMENTS_PLUGIN, "displayName": "需求中心", "version": _requirements_release_version(), "active": active, "installed": True, "hotReload": True})
     return {"items": items}
 
 @app.get("/api/plugins")
@@ -6076,7 +6098,7 @@ def list_tickets(q: str = "", search: str = "", status: str = "", page: int = 1,
     else: where.append("status!='withdrawn'")
     clause = " WHERE " + " AND ".join(where) if where else ""
     total = con.execute("SELECT COUNT(*) FROM issues" + clause, params).fetchone()[0]
-    rows = con.execute("SELECT * FROM issues" + clause + " ORDER BY manual_order ASC NULLS LAST, updated_at DESC LIMIT ? OFFSET ?", params + [page_size, (page-1)*page_size]).fetchall()
+    rows = con.execute(_ordered_issue_page_sql(clause), params + [page_size, (page-1)*page_size]).fetchall()
     items = [_ticket_item(con, row, user) for row in rows]; con.close()
     return {"tickets": items, "items": items, "total": total, "page": page, "page_size": page_size, "total_pages": (total+page_size-1)//page_size, "pages": (total+page_size-1)//page_size}
 
@@ -6358,7 +6380,7 @@ def releases():
     package_manifest = Path(__file__).resolve().parents[1] / "release" / "releases.json"
     manifest_path = package_manifest if package_manifest.is_file() else Path(__file__).resolve().parents[2] / "release" / "releases.json"
     if not manifest_path.is_file():
-        return {"current_version": "1.0.0", "releases": []}
+        raise HTTPException(503, "版本清单暂不可用")
     try:
         loaded = json.loads(manifest_path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
@@ -6367,8 +6389,14 @@ def releases():
     if not isinstance(items, list):
         raise HTTPException(503, "版本清单格式无效")
     keys = ("platform", "version", "released_at", "features", "notes", "url", "sha256", "size", "signature")
-    return {"current_version": loaded.get("current_version", "1.0.0") if isinstance(loaded, dict) else "1.0.0",
+    if not isinstance(loaded, dict) or not isinstance(loaded.get("current_version"), str):
+        raise HTTPException(503, "版本清单格式无效")
+    return {"current_version": loaded["current_version"],
             "releases": [{key: item.get(key) for key in keys} for item in items if isinstance(item, dict)]}
+
+
+def _requirements_release_version():
+    return releases()["current_version"]
 
 
 @app.get("/guide")
