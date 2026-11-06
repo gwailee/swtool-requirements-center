@@ -30,6 +30,7 @@ const hub = {
   page: 1,
   pages: 1,
   selected: "",
+  justCreated: null,
   sorting: false,
   dragTicket: null,
   listRequestSeq: 0,
@@ -950,6 +951,7 @@ function selectLocalCenter() {
   select.value = value;
 }
 async function switchCenter(id, localId = null) {
+  clearCreatedTicket();
   hub.dragTicket = null;
   document.querySelectorAll(".hub-sort-target").forEach((node) => node.classList.remove("hub-sort-target"));
   driverExpanded = false;
@@ -1014,6 +1016,27 @@ el("hub-centers").onchange = safe(() => {
   const value = el("hub-centers").value;
   return value.startsWith("local:") ? switchCenter("", value.slice(6)) : switchCenter(value);
 });
+function clearCreatedTicket() {
+  hub.justCreated = null;
+  el("hub-created-ticket")?.remove();
+}
+function renderCreatedTicket() {
+  el("hub-created-ticket")?.remove();
+  const created = hub.justCreated;
+  if (!created || created.generation !== hub.generation || created.center !== hub.center || created.local !== (hub.localCenter?.id || "")) return;
+  if (hub.currentItems.some((item) => String(item.id) === created.id)) return;
+  const section = document.createElement("section"); section.id = "hub-created-ticket";
+  section.setAttribute("aria-label", "刚创建的需求");
+  const label = document.createElement("p"); label.textContent = "刚创建的需求（不计入本页列表）";
+  const button = document.createElement("button"); button.type = "button";
+  button.textContent = created.title || "查看刚创建的需求";
+  button.className = "primary";
+  button.onclick = () => {
+    if (section.isConnected && hub.justCreated === created && created.generation === hub.generation && created.center === hub.center && created.local === (hub.localCenter?.id || "")) safe(() => openTicket(created.id))();
+  };
+  section.append(label, button);
+  el("hub-list").before(section);
+}
 async function loadList() {
   const listRequestSeq = ++hub.listRequestSeq;
   const contextGeneration = hub.generation, contextCenter = hub.center, contextLocal = hub.localCenter?.id || "";
@@ -1083,9 +1106,11 @@ async function loadList() {
   }
   if (!data.items.length)
     list.innerHTML = '<li class="muted">暂无需求，点击“新增需求”开始。</li>';
+  renderCreatedTicket();
   if (!hub.selected && data.items.length) await openTicket(data.items[0].id);
 }
 el("hub-refresh").onclick = safe(async () => {
+  clearCreatedTicket();
   hub.page = 1;
   await loadList();
 });
@@ -1097,10 +1122,12 @@ el("hub-status").onchange = () => {
   el("hub-refresh").click();
 };
 el("hub-prev").onclick = safe(async () => {
+  clearCreatedTicket();
   hub.page--;
   await loadList();
 });
 el("hub-next").onclick = safe(async () => {
+  clearCreatedTicket();
   hub.page++;
   await loadList();
 });
@@ -1223,7 +1250,8 @@ async function purgeTicket(item) {
     if (parent) tree.append(makeItem(parent));
     const current = makeItem(ticket, true); tree.append(current);
     if (children.length) { const childList = document.createElement("ul"); children.forEach((child) => childList.append(makeItem(child))); current.append(childList); }
-    section.append(heading, tree);
+    const diagram = document.createElement("div"); diagram.className = "ticket-relation-diagram";
+    section.append(heading, diagram, tree);
     if (ticket.children_truncated === true) { const note = document.createElement("p"); note.textContent = "直属子工单仅显示前 200 项。"; section.append(note); }
     return section;
   }
@@ -1256,8 +1284,13 @@ async function openTicket(id) {
     '</p><div id="hub-files"></div><h3>回复与补充</h3><div id="hub-comments"></div><form id="hub-comment-form"><label>回复内容<textarea name="body" required></textarea></label><label>回复附件<input name="files" type="file" multiple accept="image/*,.pdf,.txt,.csv,.zip,.json"></label><div class="hub-pasted-files" aria-label="粘贴的图片"></div><button type="submit" class="primary">提交回复</button></form><h3>状态历史</h3><div id="hub-history"></div>';
   window.SwtoolTicketContent?.render(detail.querySelector(".hub-description"), item.description);
   const relationGeneration = hub.generation;
-  const relations = renderTicketRelations(item, (targetId) => { if (relationGeneration === hub.generation && hub.selected === id) safe(() => openTicket(targetId))(); });
-  if (relations) detail.querySelector(".hub-ticket-heading").after(relations);
+  const relationCurrent = () => relationGeneration === hub.generation && detailCenter === hub.center && detailLocal === (hub.localCenter?.id || "") && hub.selected === id;
+  const relationNavigate = (targetId) => { if (relationCurrent()) safe(() => openTicket(targetId))(); };
+  const relations = renderTicketRelations(item, relationNavigate);
+  if (relations) {
+    detail.querySelector(".hub-ticket-heading").after(relations);
+    window.SwtoolTicketContent?.renderRelations?.(relations.querySelector(".ticket-relation-diagram"), item, {navigate: relationNavigate, isCurrent: relationCurrent});
+  }
   placeMobileDetail();
   if (item.reproduction_steps) {
     const p = document.createElement("p");
@@ -1689,7 +1722,14 @@ async function editForm(item = null) {
       if (editorContext !== currentEditorContext()) return;
       closeDialog();
       hub.selected = result.id;
+      if (!item) {
+        el("hub-search").value = "";
+        el("hub-status").value = "";
+        hub.page = 1;
+        hub.justCreated = {id: String(result.id), title: String(result.title || data.title || ""), generation: hub.generation, center: hub.center, local: hub.localCenter?.id || ""};
+      }
       await loadList();
+      if (editorContext !== currentEditorContext()) return;
       await openTicket(result.id);
       window.SWToolRequirementsMilestones?.load();
       notify("需求已保存");

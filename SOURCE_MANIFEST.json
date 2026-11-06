@@ -149,8 +149,8 @@
     },
     {
       "path": "web/index.html",
-      "size": 6153,
-      "sha256": "f7bc031ca0e441df987596c1cdf3e9a17785a19c6241383f109f07f532e0d8c2"
+      "size": 6333,
+      "sha256": "14b1718d5d9cbef6540b8671f62672f6e7d18e01d4b0fbbf5a9587dd29881473"
     },
     {
       "path": "web/plugin-manager.css",
@@ -194,33 +194,33 @@
     },
     {
       "path": "web/requirements-host.js",
-      "size": 23431,
-      "sha256": "f41112957ee924f16e7ea11ff039965f4924bcdaa6a2c7caf561dc2cf0e2e181"
+      "size": 24014,
+      "sha256": "7d2274a1dd96958d09d49703b46f02e969e2264ed892885175ac4a2439267e50"
     },
     {
       "path": "web/requirements-hub.css",
-      "size": 27838,
-      "sha256": "27977006a144892da1bf656911d680ff4f7d1042e5770923331bd9868db22b85"
+      "size": 28010,
+      "sha256": "6944c9110c347a11dabdfe10f534a160e88f11e8bee386b2e75bea1bfe525017"
     },
     {
       "path": "web/requirements-hub.html",
-      "size": 14876,
-      "sha256": "41c05e6dec7c06f1fab1715b959ed5bd8aa6bd0f5065bfc39637e38e0c7e803d"
+      "size": 14963,
+      "sha256": "f83bafebdfcc2c7527ca2ff5b50ee1831b9d6411009a10c752c8c736935d67e5"
     },
     {
       "path": "web/requirements-center-create.html",
-      "size": 5184,
-      "sha256": "ef2e15d7ae4ec44e401ee8add5c8bc023f133b99c34d9f239337495597858757"
+      "size": 5391,
+      "sha256": "d51622416e880c84651a1da21eb0bdf43c33e4f933a92ebbc4764d92d6b79ab8"
     },
     {
       "path": "web/requirements-center.html",
-      "size": 6153,
-      "sha256": "f7bc031ca0e441df987596c1cdf3e9a17785a19c6241383f109f07f532e0d8c2"
+      "size": 6333,
+      "sha256": "14b1718d5d9cbef6540b8671f62672f6e7d18e01d4b0fbbf5a9587dd29881473"
     },
     {
       "path": "web/requirements-hub.js",
-      "size": 112753,
-      "sha256": "bcdedbff403d1a2596bf223a356d34ee75d93e01e460d3170423274dbc90ce09"
+      "size": 114908,
+      "sha256": "e4d1399c162d1175b762902c427547d8565f35fe67d5d1641b238db434880dad"
     },
     {
       "path": "web/requirements-release.js",
@@ -816,6 +816,16 @@
       "path": "web/vendor/js-yaml/LICENSE",
       "size": 1084,
       "sha256": "a07bc24468b9654ce76a547d47a2db282d07733b715db4c73a98bd63961f9550"
+    },
+    {
+      "path": "web/ticket-content.js",
+      "size": 12577,
+      "sha256": "f36bdb0d8cdbbe3ccf20c1794af4f379f81bfe6d71e98d6027e8be25919044fe"
+    },
+    {
+      "path": "web/ticket-content.css",
+      "size": 3988,
+      "sha256": "1a2b81d216902c589d86f89af6b2d15dfe14053bec9af81145cf9dd8f69dc4c2"
     }
   ],
   "public_metadata": [

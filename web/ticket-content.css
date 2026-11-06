@@ -1,0 +1,29 @@
+/*
+SPDX-License-Identifier: Apache-2.0
+Copyright (c) 2026 上海商江网络科技有限公司版权所有
+软工云（swtool.com）开发团队；uqtool@163.com
+*/
+/* Same document typography and math/table conventions as community posts. */
+.ticket-markdown{white-space:normal!important;line-height:1.75;overflow-wrap:anywhere;word-break:break-word;min-width:0;max-width:100%;width:100%;box-sizing:border-box;color:inherit}
+.ticket-markdown > *{box-sizing:border-box;min-width:0;max-width:100%}
+.ticket-markdown p{margin:.65em 0}.ticket-markdown h1,.ticket-markdown h2,.ticket-markdown h3,.ticket-markdown h4{line-height:1.35;margin:1.2em 0 .5em}
+.ticket-markdown ul,.ticket-markdown ol{padding-left:1.6em}.ticket-markdown a{color:var(--acid,#7eb8ff);text-decoration:underline;overflow-wrap:anywhere}
+.ticket-markdown blockquote{margin:1em 0;padding:.5em 1em;border-left:3px solid var(--line,#777);color:var(--muted,inherit)}
+.ticket-markdown pre{padding:14px;max-width:100%;overflow:auto;background:var(--panel,#182029);border:1px solid var(--line,#555);border-radius:6px;white-space:pre}
+.ticket-markdown code{font-family:ui-monospace,monospace;font-size:.9em}.ticket-markdown :not(pre)>code{padding:2px 5px;background:var(--panel,#182029);border-radius:3px}
+.ticket-markdown .document-table-wrap{overflow-x:auto;max-width:100%}.ticket-markdown table{border-collapse:collapse;min-width:100%;width:max-content;margin:.75em 0}.ticket-markdown th,.ticket-markdown td{padding:8px 12px;border:1px solid var(--line,#777);text-align:left;max-width:28em;white-space:normal}
+.ticket-markdown .math-block{display:block;box-sizing:border-box;width:100%;max-width:100%;overflow-x:auto;overflow-y:hidden;margin:1em 0}.ticket-markdown .math-inline{display:inline-block;box-sizing:border-box;max-width:100%;vertical-align:middle;overflow-x:auto;overflow-y:hidden}
+.ticket-markdown .katex-display{width:max-content;min-width:0;max-width:none;margin:0 auto;text-align:left}.ticket-markdown .katex-display>.katex{text-align:left}.ticket-markdown .math-inline .katex{max-width:none}
+.ticket-markdown .ticket-mermaid-drawing{box-sizing:border-box;min-width:0;max-width:100%;overflow:auto;padding:8px;background:var(--panel,#182029)}.ticket-markdown .ticket-mermaid-drawing svg{display:block;max-width:none;height:auto}.ticket-markdown .ticket-render-error{color:var(--muted,inherit)}
+@media(max-width:600px){.ticket-markdown th,.ticket-markdown td{padding:6px 8px;max-width:18em}.ticket-markdown pre{padding:10px}}
+
+.ticket-markdown img{max-width:100%;height:auto}.ticket-markdown hr{border:0;border-top:1px solid var(--line,#777);margin:1em 0}
+.ticket-markdown .ticket-mermaid-drawing svg .node rect,.ticket-markdown .ticket-mermaid-drawing svg .node polygon,.ticket-markdown .ticket-mermaid-drawing svg .node circle{fill:var(--panel,#182029);stroke:var(--acid,#7eb8ff)}
+.ticket-markdown .ticket-mermaid-drawing svg text{fill:var(--ink,#e8edf2)}.ticket-markdown .ticket-mermaid-drawing svg .flowchart-link,.ticket-markdown .ticket-mermaid-drawing svg .messageLine0,.ticket-markdown .ticket-mermaid-drawing svg .messageLine1{stroke:var(--ink,#e8edf2);fill:none}.ticket-markdown .ticket-mermaid-drawing svg marker path{fill:var(--ink,#e8edf2)}
+/* Mermaid measures flowchart labels with these defaults. Its embedded stylesheet
+   is discarded by the SVG sanitizer, so restore only the fixed typography. */
+.ticket-markdown .ticket-mermaid-drawing svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px}
+.ticket-markdown .ticket-mermaid-drawing svg .node text{text-anchor:middle}
+
+/* Relation SVG is supplementary; the native relation buttons provide keyboard access. */
+.ticket-relation-diagram{min-width:0;max-width:100%}.ticket-relation-diagram .ticket-mermaid-drawing{max-height:32rem;overflow:auto}.ticket-relation-diagram .ticket-relation-node{cursor:pointer}.ticket-relation-diagram .ticket-relation-node:hover rect{stroke-width:3px}.ticket-relation-diagram p{overflow-wrap:anywhere}
