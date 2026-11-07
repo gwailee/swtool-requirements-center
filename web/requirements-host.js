@@ -62,6 +62,7 @@ Copyright (c) 2026 上海商江网络科技有限公司版权所有
     author_username: item.author_username || item.author || "需求用户", author_id: item.author_id || item.user_id || "",
     created_at: item.created_at, updated_at: item.updated_at || item.created_at,
     status_history: item.status_history, resolved_at: item.resolved_at,
+    parent_ticket_id: [item.parent_ticket_id, item.metadata?.parent_ticket_id, item.parent_ticket?.id].find((value) => typeof value === "string" && value.trim())?.trim() || null,
     parent_ticket: relationSummary(item.parent_ticket),
     child_tickets: Array.isArray(item.child_tickets) ? item.child_tickets.slice(0, 200).map(relationSummary).filter(Boolean) : [],
     children_truncated: item.children_truncated === true || (Array.isArray(item.child_tickets) && item.child_tickets.length > 200),

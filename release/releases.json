@@ -1,7 +1,21 @@
 {
   "format": 1,
-  "current_version": "1.4.4",
+  "current_version": "1.4.5",
   "releases": [
+    {
+      "platform": "source",
+      "version": "1.4.5",
+      "released_at": "2026-11-07",
+      "features": [
+        "宿主桥接保留parent_ticket_id，父子工单恢复真实归组",
+        "父工单卡片占满可用宽度，展开控件固定右侧",
+        "移动端详情操作按钮自动换行，避免溢出"
+      ],
+      "notes": "宿主桥接保留父工单关系，父子工单恢复真实树状归组；父工单卡片占满可用宽度，展开控件固定在右侧；移动端详情操作按钮自动换行，避免溢出。插件与独立版同步修复。下载源码 ZIP 后按指南部署；正式交付以同版 GitHub 标签和 Release 为准。",
+      "url": "https://swtool.com/plugins/requirements-center/api/tools/source",
+      "sha256": null,
+      "size": null
+    },
     {
       "platform": "source",
       "version": "1.4.4",
