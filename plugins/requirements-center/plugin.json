@@ -1,7 +1,7 @@
 {
   "name": "requirements-center",
   "displayName": "需求中心",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "providerEntry": "server/app.py:requirements_plugin_info",
   "frontendEntry": "web/requirements-center.js",
   "styleEntry": "web/style.css",

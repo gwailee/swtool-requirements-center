@@ -1,7 +1,19 @@
 {
   "format": 1,
-  "current_version": "1.4.1",
+  "current_version": "1.4.2",
   "releases": [
+    {
+      "platform": "source",
+      "version": "1.4.2",
+      "released_at": "2026-11-07",
+      "features": [
+        "工单解决后移至已解决分组，各分组内保留人工排序"
+      ],
+      "notes": "工单解决后移至已解决分组，各分组内保留人工排序；插件与独立版同步修复。下载源码 ZIP 后按指南部署；正式交付以同版 GitHub 标签和 Release 为准。",
+      "url": "https://swtool.com/plugins/requirements-center/api/tools/source",
+      "sha256": null,
+      "size": null
+    },
     {
       "platform": "source",
       "version": "1.4.1",

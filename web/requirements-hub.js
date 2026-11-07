@@ -1042,11 +1042,16 @@ function renderCreatedTicket() {
 }
 function buildTicketTree(items) {
   const visibleById = new Map(items.map((item) => [String(item.id), item]));
+  const isCompleted = (item) => item.status === "resolved" || item.status === "closed";
   const parentIdOf = (item) => String(item.parent_ticket_id || item.metadata?.parent_ticket_id || item.parent_ticket?.id || "");
   const children = new Map(), roots = [], ordered = [], seen = new Set();
+  const partition = (entries) => entries.reduce((groups, item) => {
+    groups[isCompleted(item) ? 1 : 0].push(item);
+    return groups;
+  }, [[], []]).flat();
   for (const item of items) {
     const id = String(item.id), parentId = parentIdOf(item);
-    if (!parentId || parentId === id || !visibleById.has(parentId)) roots.push(item);
+    if (!parentId || parentId === id || !visibleById.has(parentId) || isCompleted(visibleById.get(parentId)) !== isCompleted(item)) roots.push(item);
     else {
       const siblings = children.get(parentId) || [];
       siblings.push(item); children.set(parentId, siblings);
@@ -1059,9 +1064,9 @@ function buildTicketTree(items) {
     const next = new Set(ancestors); next.add(id);
     for (const child of children.get(id) || []) visit(child, next);
   };
-  roots.forEach((item) => visit(item));
+  partition(roots).forEach((item) => visit(item));
   items.forEach((item) => visit(item));
-  return {roots, children, ordered, parentIdOf};
+  return {roots: partition(roots), children, ordered: partition(ordered), parentIdOf};
 }
 async function loadList() {
   const listRequestSeq = ++hub.listRequestSeq;

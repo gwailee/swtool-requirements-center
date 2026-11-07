@@ -5834,17 +5834,20 @@ def _issue_view(con, issue_id, user):
 def _ordered_issue_page_sql(clause):
     # Only the already visible/search-filtered set participates; no hidden parents.
     return """WITH RECURSIVE ranked AS (
-        SELECT issues.*, row_number() OVER (ORDER BY manual_order ASC NULLS LAST,
+        SELECT issues.*, row_number() OVER (ORDER BY CASE WHEN status IN ('resolved','closed') THEN 1 ELSE 0 END,
+            manual_order ASC NULLS LAST,
             CASE status WHEN 'in_progress' THEN 0 WHEN 'open' THEN 1 WHEN 'pending' THEN 2 ELSE 3 END,
             updated_at DESC,id DESC) AS sort_rank FROM issues""" + clause + """
     ), tree(id,sort_path) AS (
         SELECT e.id,ARRAY[e.sort_rank] FROM ranked e WHERE NOT EXISTS (
             SELECT 1 FROM ranked p WHERE p.id=e.parent_ticket_id AND p.id<>e.id
-            AND p.manual_order IS NOT DISTINCT FROM e.manual_order)
+            AND p.manual_order IS NOT DISTINCT FROM e.manual_order
+            AND (p.status IN ('resolved','closed')) = (e.status IN ('resolved','closed')))
         UNION ALL
         SELECT e.id,t.sort_path || e.sort_rank FROM tree t JOIN ranked p ON p.id=t.id
             JOIN ranked e ON e.parent_ticket_id=p.id
             AND e.manual_order IS NOT DISTINCT FROM p.manual_order
+            AND (p.status IN ('resolved','closed')) = (e.status IN ('resolved','closed'))
             WHERE NOT e.sort_rank=ANY(t.sort_path)
     ), paths AS (
         SELECT * FROM tree UNION ALL
