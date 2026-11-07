@@ -31,6 +31,7 @@ const hub = {
   pages: 1,
   selected: "",
   justCreated: null,
+  collapsedTickets: new Set(),
   sorting: false,
   dragTicket: null,
   listRequestSeq: 0,
@@ -60,9 +61,10 @@ function placeMobileDetail() {
   const selected = mobile && hub.selected
     ? document.querySelector(`#hub-list button[data-ticket-id="${CSS.escape(hub.selected)}"]`)
     : null;
-  const target = selected?.closest("li");
+  const target = selected?.closest(".hub-ticket-node");
   if (target) {
-    target.append(detail);
+    const row = selected.closest(".hub-ticket-row");
+    (row || target).append(detail);
     detail.classList.add("hub-detail-inline");
   } else {
     home.append(detail);
@@ -1038,6 +1040,29 @@ function renderCreatedTicket() {
   section.append(label, button);
   el("hub-list").before(section);
 }
+function buildTicketTree(items) {
+  const visibleById = new Map(items.map((item) => [String(item.id), item]));
+  const parentIdOf = (item) => String(item.parent_ticket_id || item.metadata?.parent_ticket_id || item.parent_ticket?.id || "");
+  const children = new Map(), roots = [], ordered = [], seen = new Set();
+  for (const item of items) {
+    const id = String(item.id), parentId = parentIdOf(item);
+    if (!parentId || parentId === id || !visibleById.has(parentId)) roots.push(item);
+    else {
+      const siblings = children.get(parentId) || [];
+      siblings.push(item); children.set(parentId, siblings);
+    }
+  }
+  const visit = (item, ancestors = new Set()) => {
+    const id = String(item.id);
+    if (seen.has(id) || ancestors.has(id)) return;
+    seen.add(id); ordered.push(item);
+    const next = new Set(ancestors); next.add(id);
+    for (const child of children.get(id) || []) visit(child, next);
+  };
+  roots.forEach((item) => visit(item));
+  items.forEach((item) => visit(item));
+  return {roots, children, ordered, parentIdOf};
+}
 async function loadList() {
   const listRequestSeq = ++hub.listRequestSeq;
   const contextGeneration = hub.generation, contextCenter = hub.center, contextLocal = hub.localCenter?.id || "";
@@ -1062,31 +1087,25 @@ async function loadList() {
   list.replaceChildren();
   hub.currentItems = Array.isArray(data.items) ? data.items : [];
   const visibleById = new Map(hub.currentItems.map((item) => [String(item.id), item]));
-  const visibleDepth = (item) => {
-    let depth = 0, parentId = item.parent_ticket_id || item.metadata?.parent_ticket_id || item.parent_ticket?.id, seen = new Set([String(item.id)]);
-    while (parentId && depth < 8) {
-      const key = String(parentId);
-      if (seen.has(key)) break;
-      seen.add(key);
-      if (!visibleById.has(key)) { depth++; break; }
-      const parent = visibleById.get(key);
-      depth++; parentId = parent.parent_ticket_id || parent.metadata?.parent_ticket_id || parent.parent_ticket?.id;
-    }
-    return depth;
-  };
+  const {children, ordered, parentIdOf} = buildTicketTree(hub.currentItems);
+  const rendered = new Set();
   updateSortControls();
-  for (const [itemIndex, item] of hub.currentItems.entries()) {
-    const li = document.createElement("li"),
-      button = document.createElement("button");
+  const renderNode = (item, itemIndex, depth = 0) => {
+    const id = String(item.id);
+    if (rendered.has(id)) return document.createElement("li");
+    rendered.add(id);
+    const li = document.createElement("li"), row = document.createElement("div"), button = document.createElement("button");
+    li.className = "hub-ticket-node";
+    li.dataset.depth = String(depth);
+    row.className = "hub-ticket-row";
     button.dataset.ticketId = item.id;
-    const depth = visibleDepth(item);
     button.dataset.depth = String(depth);
     if (depth) button.classList.add("hub-child-ticket");
     button.title = item.title || "未命名需求";
     button.setAttribute("aria-pressed", String(item.id === hub.selected));
     button.innerHTML =
       "<strong>" +
-      (depth ? "↳ " : "") + esc(item.title) +
+      esc(item.title) +
       '</strong><span class="hub-status ' +
       esc(item.status) +
       '">' +
@@ -1118,9 +1137,32 @@ async function loadList() {
     };
     button.addEventListener("click", () => { hub.selected = String(item.id); updateSortControls(); });
     if (canEdit(item)) window.SWToolRequirementActions?.bind(button,{label:item.status==='withdrawn'?'重新提交':'撤回需求',onAction:safe(()=>toggleWithdrawal(item))});
-    li.append(button);
-    list.append(li);
-  }
+    row.append(button);
+    const parentId = parentIdOf(item);
+    if (parentId && !visibleById.has(parentId)) {
+      const note = document.createElement("small"); note.className = "hub-tree-parent-missing"; note.textContent = "父工单不在本页"; row.append(note);
+    }
+    const descendants = (children.get(id) || []).filter((child) => ordered.includes(child) && !rendered.has(String(child.id)));
+    if (descendants.length) {
+      const toggle = document.createElement("button"), childList = document.createElement("ol"), collapsed = hub.collapsedTickets.has(id);
+      childList.id = `hub-ticket-children-${itemIndex}`;
+      toggle.type = "button"; toggle.className = "hub-tree-toggle";
+      toggle.setAttribute("aria-expanded", String(!collapsed));
+      toggle.setAttribute("aria-label", `${collapsed ? "展开" : "折叠"}“${item.title || "未命名需求"}”的子工单（${descendants.length}）`);
+      toggle.setAttribute("aria-controls", childList.id);
+      toggle.textContent = collapsed ? "▸" : "▾";
+      toggle.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); if (hub.collapsedTickets.has(id)) hub.collapsedTickets.delete(id); else hub.collapsedTickets.add(id); loadList(); });
+      row.prepend(toggle);
+      childList.className = "hub-ticket-children"; childList.hidden = collapsed;
+      descendants.forEach((child) => childList.append(renderNode(child, hub.currentItems.indexOf(child), depth + 1)));
+      li.append(row, childList);
+    } else {
+      const spacer = document.createElement("span"); spacer.className = "hub-tree-spacer"; spacer.setAttribute("aria-hidden", "true"); row.prepend(spacer);
+      li.append(row);
+    }
+    return li;
+  };
+  ordered.forEach((item) => { if (!rendered.has(String(item.id))) list.append(renderNode(item, hub.currentItems.indexOf(item))); });
   if (!data.items.length)
     list.innerHTML = '<li class="muted">暂无需求，点击“新增需求”开始。</li>';
   renderCreatedTicket();
