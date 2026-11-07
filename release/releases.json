@@ -1,7 +1,20 @@
 {
   "format": 1,
-  "current_version": "1.4.3",
+  "current_version": "1.4.4",
   "releases": [
+    {
+      "platform": "source",
+      "version": "1.4.4",
+      "released_at": "2026-11-07",
+      "features": [
+        "父工单标题与上移按钮对齐，保留子工单逐级缩进",
+        "移动端编辑、删除等操作按钮换行，避免窄屏溢出"
+      ],
+      "notes": "父工单标题与上移按钮对齐，保留子工单逐级缩进，移动端编辑、删除等操作按钮换行防止溢出；插件与独立版同步修复。下载源码 ZIP 后按指南部署；正式交付以同版 GitHub 标签和 Release 为准。",
+      "url": "https://swtool.com/plugins/requirements-center/api/tools/source",
+      "sha256": null,
+      "size": null
+    },
     {
       "platform": "source",
       "version": "1.4.3",
