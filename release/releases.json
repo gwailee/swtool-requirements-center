@@ -1,7 +1,17 @@
 {
   "format": 1,
-  "current_version": "1.3.6",
+  "current_version": "1.3.8",
   "releases": [
+    {
+      "platform": "source",
+      "version": "1.3.8",
+      "released_at": "2026-11-07",
+      "features": ["移动端回复操作按钮紧凑同行布局并提供无障碍名称", "移动端导入导出入口合并为单一按钮，减少页面占用"],
+      "notes": "改善需求中心移动端回复操作可达性与横向布局，并将导入导出入口合并为紧凑按钮。下载后请按使用指南在新目录手动部署；正式交付以同版 GitHub 标签和 Release 为准。",
+      "url": "https://swtool.com/plugins/requirements-center/api/tools/source",
+      "sha256": null,
+      "size": null
+    },
     {
       "platform": "source",
       "version": "1.3.6",

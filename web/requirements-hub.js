@@ -1395,9 +1395,9 @@ async function openTicket(id) {
     const active = () => generation === hub.generation && hub.selected === id && block.isConnected;
     if (comment.editableByViewer === true) {
       const edit = document.createElement("button");
-      edit.type = "button"; edit.textContent = "编辑回复";
+      edit.type = "button"; edit.textContent = "编辑"; edit.setAttribute("aria-label", "编辑回复");
       const remove = document.createElement("button");
-      remove.type = "button"; remove.textContent = "删除回复";
+      remove.type = "button"; remove.textContent = "删除"; remove.setAttribute("aria-label", "删除回复");
       actions.append(edit, remove);
       edit.onclick = safe(async () => {
         if (!active() || actions.hidden) return;

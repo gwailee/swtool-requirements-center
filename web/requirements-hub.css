@@ -598,6 +598,17 @@ dialog header {
   padding: 14px 0;
   border-bottom: 1px solid var(--hub-border);
 }
+.hub-comment-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.hub-comment-actions button {
+  flex: 0 0 auto;
+  min-height: 40px;
+}
 .hub-body .issue-attachments {
   display: flex;
   flex-wrap: wrap;
@@ -728,6 +739,13 @@ dialog header {
   }
   .hub-tools > * {
     flex: 1;
+  }
+  .hub-tools #hub-archive,
+  .hub-tools > [data-action="downloads"] {
+    flex: 0 1 auto;
+  }
+  .hub-tools #hub-archive {
+    display: flex;
   }
   .hub-driver-panel {
     padding: 15px !important;

@@ -55,7 +55,7 @@
     {
       "path": "plugins/requirements-center/plugin.json",
       "size": 948,
-      "sha256": "df815df410e18097939f38f87d15ede1f0a77c5a84fbbc7be4ac0530bb4cd00c"
+      "sha256": "3896bd6751d6b35a92a0f63154ba3217a927781da600e93520897327444ade51"
     },
     {
       "path": "plugins/requirements-center/tickets.swtool.html",
@@ -144,13 +144,13 @@
     },
     {
       "path": "release/releases.json",
-      "size": 1931,
-      "sha256": "55c29a9f9fca610cd8f54f48cd2f690c25184127eb98d22a7bd80ff81f72541c"
+      "size": 2563,
+      "sha256": "7059aafb23a05e70de02995a4187f7de9bdcfa530a39d85fad4ffd681ab6972a"
     },
     {
       "path": "web/index.html",
-      "size": 6323,
-      "sha256": "6635d2c78d6338bb6631bea471b16392b366a37d33cc3f6c16c269944ba29280"
+      "size": 6320,
+      "sha256": "f1ec97f6f11bcfa2ae2de99e7dcefc768ed7fa5ded5d83cec421f0da445825f5"
     },
     {
       "path": "web/plugin-manager.css",
@@ -199,8 +199,8 @@
     },
     {
       "path": "web/requirements-hub.css",
-      "size": 28758,
-      "sha256": "e35a7fbbec51b9dcaace6281c38053732917ef3ad86fc6f744e59ad6e62778a9"
+      "size": 29090,
+      "sha256": "99caa5881211b0b87281780b5785c0fa13fe25ab34078621419af286524db450"
     },
     {
       "path": "web/requirements-hub.html",
@@ -209,18 +209,18 @@
     },
     {
       "path": "web/requirements-center-create.html",
-      "size": 5381,
-      "sha256": "139c9920722ea54113584bacff6cb2bc5e697f803869bb243df4a413c6ebf3ed"
+      "size": 5378,
+      "sha256": "0d0bab2021813d35b7a0ca36ea507a74d4c5149424c01c6f68db0e0fcd8750a7"
     },
     {
       "path": "web/requirements-center.html",
-      "size": 6323,
-      "sha256": "6635d2c78d6338bb6631bea471b16392b366a37d33cc3f6c16c269944ba29280"
+      "size": 6320,
+      "sha256": "f1ec97f6f11bcfa2ae2de99e7dcefc768ed7fa5ded5d83cec421f0da445825f5"
     },
     {
       "path": "web/requirements-hub.js",
-      "size": 117457,
-      "sha256": "4b868fb2c08e70ba023a7792d5c9451d2d8800c8f065d5d095e8c3d746292da8"
+      "size": 117545,
+      "sha256": "93fb4d19fa2d27ac5ca034a8e64b4cd3ba5777748ff6ccc04111798265038321"
     },
     {
       "path": "web/requirements-release.js",
@@ -841,8 +841,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "size": 1087,
-      "sha256": "786af7548584761cd2da95606180f910acf75fcd03bbae18c3c1551c946a5d02"
+      "size": 1227,
+      "sha256": "d3b30cf4b7514d5c31227590f3b9898390811ca44fee572a870123c7cc9d2eef"
     },
     {
       "path": "CODE_OF_CONDUCT.md",
