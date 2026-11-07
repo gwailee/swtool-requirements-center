@@ -1,7 +1,21 @@
 {
   "format": 1,
-  "current_version": "1.4.6",
+  "current_version": "1.4.7",
   "releases": [
+    {
+      "platform": "source",
+      "version": "1.4.7",
+      "released_at": "2026-11-07",
+      "features": [
+        "工单详情新增“新增子工单”按钮，直接选中当前工单为父工单",
+        "创建表单显示已选父工单，可展开更换，无需再次搜索",
+        "插件与独立版同步，兼容手机与只读权限"
+      ],
+      "notes": "工单详情新增“新增子工单”入口，创建时自动引用当前父工单并显示标题，无需搜索；仍可展开更换父工单。插件与独立版同步。下载源码 ZIP 后按指南部署；正式交付以同版 GitHub 标签和 Release 为准。",
+      "url": "https://swtool.com/plugins/requirements-center/api/tools/source",
+      "sha256": null,
+      "size": null
+    },
     {
       "platform": "source",
       "version": "1.4.6",

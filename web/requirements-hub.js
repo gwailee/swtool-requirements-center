@@ -1418,6 +1418,15 @@ async function openTicket(id) {
     titleStatus.append(Object.assign(document.createElement("span"), {className: "hub-status " + String(item.status || ""), textContent: states[item.status] || item.status || ""}));
   }
   const titleActions = el("hub-title-actions");
+  if (canWrite()) {
+    const child = document.createElement("button"); child.id = "hub-add-child"; child.type = "button"; child.textContent = "新增子工单";
+    const context = JSON.stringify([hub.generation, hub.center, hub.localCenter?.id || ""]);
+    child.onclick = safe(() => {
+      if (!canWrite() || hub.selected !== item.id || context !== JSON.stringify([hub.generation, hub.center, hub.localCenter?.id || ""])) throw Error("中心或工单已切换，请重新打开详情。");
+      return editForm(null, item);
+    });
+    titleActions?.append(child);
+  }
   el("hub-edit").onclick = safe(() => editForm(item));
   el("hub-edit").hidden = !canEdit(item);
   const withdraw=document.createElement('button');withdraw.id='hub-withdraw';withdraw.textContent=item.status==='withdrawn'?'重新提交':'撤回需求';withdraw.onclick=safe(()=>toggleWithdrawal(item));titleActions?.append(withdraw);
@@ -1677,7 +1686,7 @@ function attachImagePaste(form) {
   pendingImagePastes.add(controller);
   return controller;
 }
-  function attachParentPicker(targetForm, fetchTickets, currentContext = () => "", expectedCenter = "default") {
+  function attachParentPicker(targetForm, fetchTickets, currentContext = () => "", expectedCenter = "default", initialParent = null) {
     if (!targetForm) return null;
     const context = currentContext(); let sequence = 0, allowed = new Set();
     const group = document.createElement("fieldset"); group.className = "ticket-parent-picker";
@@ -1688,11 +1697,23 @@ function attachImagePaste(form) {
     const search = document.createElement("button"); search.type = "button"; search.textContent = "搜索父工单";
     const choiceLabel = document.createElement("label"), select = document.createElement("select"); choiceLabel.textContent = "父工单"; choiceLabel.append(select);
     const message = document.createElement("p"); message.setAttribute("role", "status"); message.setAttribute("aria-live", "polite");
-    const reset = () => { const none = document.createElement("option"); none.value = ""; none.textContent = "无父工单"; select.replaceChildren(none); select.value = ""; allowed = new Set(); };
-    reset(); panel.append(label, search, choiceLabel, message); group.append(legend, toggle, panel); targetForm.prepend(group);
+    const summary = document.createElement("p"); summary.className = "ticket-parent-summary"; summary.setAttribute("role", "status");
+    const updateSummary = () => { summary.hidden = !select.value; summary.textContent = select.value ? "父工单：" + select.options[select.selectedIndex].textContent : "未选择父工单"; };
+    const reset = () => { ++sequence; search.disabled = false; message.textContent = ""; const none = document.createElement("option"); none.value = ""; none.textContent = "无父工单"; select.replaceChildren(none); select.value = ""; allowed = new Set(); updateSummary(); };
+    reset(); panel.append(label, search, choiceLabel, message); group.append(legend, summary, toggle, panel); targetForm.prepend(group);
+    const seed = (ticket) => {
+      if (context !== currentContext() || !ticket?.id || (ticket.center_id != null && String(ticket.center_id) !== String(expectedCenter))) return false;
+      reset(); search.disabled = false;
+      const option = document.createElement("option"); option.value = String(ticket.id); option.textContent = String(ticket.title || "未命名需求");
+      select.append(option); allowed.add(option.value); select.value = option.value; updateSummary();
+      panel.hidden = true; toggle.setAttribute("aria-expanded", "false"); toggle.textContent = "展开父工单选择";
+      return true;
+    };
+    select.onchange = updateSummary;
+    if (initialParent && !seed(initialParent)) throw Error("当前父工单不属于此需求中心，请重新打开工单。");
     toggle.onclick = () => { panel.hidden = !panel.hidden; toggle.setAttribute("aria-expanded", String(!panel.hidden)); toggle.textContent = panel.hidden ? "展开父工单选择" : "收起父工单选择"; };
     search.onclick = async () => {
-      const requestSequence = ++sequence; reset();
+      reset(); const requestSequence = ++sequence;
       if (context !== currentContext()) { message.textContent = "中心已切换，请重新打开创建表单。"; return; }
       search.disabled = true; message.textContent = "正在搜索父工单…";
       try {
@@ -1704,9 +1725,10 @@ function attachImagePaste(form) {
       } catch { if (requestSequence === sequence && context === currentContext()) message.textContent = "父工单搜索失败，可保留无父工单继续创建。"; }
       finally { if (requestSequence === sequence) search.disabled = false; }
     };
-    return {value: () => context === currentContext() && allowed.has(select.value) ? select.value : null, reset};
+    return {value: () => context === currentContext() && allowed.has(select.value) ? select.value : null, reset, seed};
   }
-async function editForm(item = null) {
+async function editForm(item = null, parent = null) {
+  if (parent && (item || hub.selected !== parent.id)) throw Error("当前工单已切换，请重新打开新增子工单。");
   if (!canWrite()) throw Error("目标 Key 未获写入能力，请轮换授权 Key 或在目标中心操作");
   if (item && !canEdit(item)) throw Error("只能编辑远端 Key 所属账号的需求");
   const localCenter = Boolean(hub.localCenter);
@@ -1750,7 +1772,7 @@ async function editForm(item = null) {
   const form = el("hub-editor");
   const editorContext = JSON.stringify([hub.generation, hub.center, hub.localCenter?.id || "", token]);
   const currentEditorContext = () => JSON.stringify([hub.generation, hub.center, hub.localCenter?.id || "", token]);
-  const parentPicker = item ? null : attachParentPicker(form, ticketApi, currentEditorContext, hub.localCenter?.id || "default");
+  const parentPicker = item ? null : attachParentPicker(form, ticketApi, currentEditorContext, hub.localCenter?.id || "default", parent);
   let savedId = item?.id;
   let savedVersion = item?.updated_at;
   let savedStatus = item?.status;
@@ -1771,6 +1793,7 @@ async function editForm(item = null) {
     if (message) message.textContent = "正在保存…";
     try {
       if (editorContext !== currentEditorContext()) throw Error("中心已切换，请重新打开创建表单。");
+      if (!canWrite()) throw Error("当前中心没有写入权限。");
       if (!String(form.elements.namedItem("description").value || "").trim()) {
         el("hub-editor-message").textContent = "请填写需求描述";
         button.disabled = false;
