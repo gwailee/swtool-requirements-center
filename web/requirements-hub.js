@@ -1042,16 +1042,11 @@ function renderCreatedTicket() {
 }
 function buildTicketTree(items) {
   const visibleById = new Map(items.map((item) => [String(item.id), item]));
-  const isCompleted = (item) => item.status === "resolved" || item.status === "closed";
   const parentIdOf = (item) => String(item.parent_ticket_id || item.metadata?.parent_ticket_id || item.parent_ticket?.id || "");
   const children = new Map(), roots = [], ordered = [], seen = new Set();
-  const partition = (entries) => entries.reduce((groups, item) => {
-    groups[isCompleted(item) ? 1 : 0].push(item);
-    return groups;
-  }, [[], []]).flat();
   for (const item of items) {
     const id = String(item.id), parentId = parentIdOf(item);
-    if (!parentId || parentId === id || !visibleById.has(parentId) || isCompleted(visibleById.get(parentId)) !== isCompleted(item)) roots.push(item);
+    if (!parentId || parentId === id || !visibleById.has(parentId)) roots.push(item);
     else {
       const siblings = children.get(parentId) || [];
       siblings.push(item); children.set(parentId, siblings);
@@ -1064,9 +1059,9 @@ function buildTicketTree(items) {
     const next = new Set(ancestors); next.add(id);
     for (const child of children.get(id) || []) visit(child, next);
   };
-  partition(roots).forEach((item) => visit(item));
+  roots.forEach((item) => visit(item));
   items.forEach((item) => visit(item));
-  return {roots: partition(roots), children, ordered: partition(ordered), parentIdOf};
+  return {roots, children, ordered, parentIdOf};
 }
 async function loadList() {
   const listRequestSeq = ++hub.listRequestSeq;
@@ -1156,7 +1151,16 @@ async function loadList() {
       toggle.setAttribute("aria-label", `${collapsed ? "展开" : "折叠"}“${item.title || "未命名需求"}”的子工单（${descendants.length}）`);
       toggle.setAttribute("aria-controls", childList.id);
       toggle.textContent = collapsed ? "▸" : "▾";
-      toggle.addEventListener("click", (event) => { event.preventDefault(); event.stopPropagation(); if (hub.collapsedTickets.has(id)) hub.collapsedTickets.delete(id); else hub.collapsedTickets.add(id); loadList(); });
+      toggle.addEventListener("click", (event) => {
+        event.preventDefault(); event.stopPropagation();
+        if (listRequestSeq !== hub.listRequestSeq || contextGeneration !== hub.generation || contextCenter !== hub.center || contextLocal !== (hub.localCenter?.id || "")) return;
+        const nextCollapsed = !hub.collapsedTickets.has(id);
+        if (nextCollapsed) hub.collapsedTickets.add(id); else hub.collapsedTickets.delete(id);
+        childList.hidden = nextCollapsed;
+        toggle.setAttribute("aria-expanded", String(!nextCollapsed));
+        toggle.setAttribute("aria-label", `${nextCollapsed ? "展开" : "折叠"}“${item.title || "未命名需求"}”的子工单（${descendants.length}）`);
+        toggle.textContent = nextCollapsed ? "▸" : "▾";
+      });
       row.prepend(toggle);
       childList.className = "hub-ticket-children"; childList.hidden = collapsed;
       descendants.forEach((child) => childList.append(renderNode(child, hub.currentItems.indexOf(child), depth + 1)));

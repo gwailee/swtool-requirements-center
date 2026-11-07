@@ -1,7 +1,19 @@
 {
   "format": 1,
-  "current_version": "1.4.2",
+  "current_version": "1.4.3",
   "releases": [
+    {
+      "platform": "source",
+      "version": "1.4.3",
+      "released_at": "2026-11-07",
+      "features": [
+        "同一父工单的子工单归组并逐层缩进，父子关系优先于人工排序和完成状态"
+      ],
+      "notes": "同一父工单的子工单归组并逐层缩进，父子关系优先于人工排序和完成状态；展开与收起直接更新现有列表。插件与独立版同步修复。下载源码 ZIP 后按指南部署；正式交付以同版 GitHub 标签和 Release 为准。",
+      "url": "https://swtool.com/plugins/requirements-center/api/tools/source",
+      "sha256": null,
+      "size": null
+    },
     {
       "platform": "source",
       "version": "1.4.2",

@@ -5840,14 +5840,10 @@ def _ordered_issue_page_sql(clause):
             updated_at DESC,id DESC) AS sort_rank FROM issues""" + clause + """
     ), tree(id,sort_path) AS (
         SELECT e.id,ARRAY[e.sort_rank] FROM ranked e WHERE NOT EXISTS (
-            SELECT 1 FROM ranked p WHERE p.id=e.parent_ticket_id AND p.id<>e.id
-            AND p.manual_order IS NOT DISTINCT FROM e.manual_order
-            AND (p.status IN ('resolved','closed')) = (e.status IN ('resolved','closed')))
+            SELECT 1 FROM ranked p WHERE p.id=e.parent_ticket_id AND p.id<>e.id)
         UNION ALL
         SELECT e.id,t.sort_path || e.sort_rank FROM tree t JOIN ranked p ON p.id=t.id
             JOIN ranked e ON e.parent_ticket_id=p.id
-            AND e.manual_order IS NOT DISTINCT FROM p.manual_order
-            AND (p.status IN ('resolved','closed')) = (e.status IN ('resolved','closed'))
             WHERE NOT e.sort_rank=ANY(t.sort_path)
     ), paths AS (
         SELECT * FROM tree UNION ALL
