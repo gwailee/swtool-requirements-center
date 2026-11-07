@@ -1673,12 +1673,15 @@ function attachImagePaste(form) {
     const context = currentContext(); let sequence = 0, allowed = new Set();
     const group = document.createElement("fieldset"); group.className = "ticket-parent-picker";
     const legend = document.createElement("legend"); legend.textContent = "父工单（可选）";
+    const toggle = document.createElement("button"); toggle.type = "button"; toggle.className = "ticket-parent-picker-toggle"; toggle.textContent = "展开父工单选择"; toggle.setAttribute("aria-expanded", "false");
+    const panel = document.createElement("div"); panel.id = "ticket-parent-picker-options"; panel.hidden = true; toggle.setAttribute("aria-controls", panel.id);
     const label = document.createElement("label"), input = document.createElement("input"); label.textContent = "搜索父工单标题"; input.type = "search"; input.maxLength = 100; label.append(input);
     const search = document.createElement("button"); search.type = "button"; search.textContent = "搜索父工单";
     const choiceLabel = document.createElement("label"), select = document.createElement("select"); choiceLabel.textContent = "父工单"; choiceLabel.append(select);
     const message = document.createElement("p"); message.setAttribute("role", "status"); message.setAttribute("aria-live", "polite");
     const reset = () => { const none = document.createElement("option"); none.value = ""; none.textContent = "无父工单"; select.replaceChildren(none); select.value = ""; allowed = new Set(); };
-    reset(); group.append(legend, label, search, choiceLabel, message); targetForm.prepend(group);
+    reset(); panel.append(label, search, choiceLabel, message); group.append(legend, toggle, panel); targetForm.prepend(group);
+    toggle.onclick = () => { panel.hidden = !panel.hidden; toggle.setAttribute("aria-expanded", String(!panel.hidden)); toggle.textContent = panel.hidden ? "展开父工单选择" : "收起父工单选择"; };
     search.onclick = async () => {
       const requestSequence = ++sequence; reset();
       if (context !== currentContext()) { message.textContent = "中心已切换，请重新打开创建表单。"; return; }
