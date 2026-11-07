@@ -529,7 +529,7 @@ dialog header {
 .hub-ticket-children > li { min-width: 0; max-width: 100%; }
 .hub-tree-toggle, .hub-tree-spacer { position: absolute; inset-inline-end: 4px; top: 0; z-index: 1; width: 44px; min-width: 44px; height: 44px; box-sizing: border-box; }
 .hub-body .hub-ticket-row > button.hub-tree-toggle { display: grid; place-items: center; width: 44px; min-width: 44px; max-width: 44px; height: 44px; min-height: 44px; padding: 0; box-sizing: border-box; border: 1px solid var(--hub-border); border-radius: 8px; background: var(--hub-card); color: var(--hub-ink); cursor: pointer; font-size: 18px; }
-.hub-body .hub-ticket-row > button[data-ticket-id] { display: grid; width: 100%; box-sizing: border-box; padding-inline-end: 56px; min-height: 44px; min-width: 0; max-width: 100%; }
+.hub-body .hub-ticket-row > button[data-ticket-id] { display: grid; width: 100%; height: auto; white-space: normal; overflow-wrap: anywhere; box-sizing: border-box; padding-inline-end: 56px; min-height: 44px; min-width: 0; max-width: 100%; }
 .hub-tree-parent-missing { color: var(--hub-muted); overflow-wrap: anywhere; }
 .hub-ticket-row button:focus-visible { outline: 2px solid var(--hub-accent); outline-offset: 2px; }
 .hub-ticket-row > button[data-ticket-id] {
