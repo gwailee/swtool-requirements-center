@@ -55,7 +55,7 @@
     {
       "path": "plugins/requirements-center/plugin.json",
       "size": 948,
-      "sha256": "add2c67709ab6f0afe5207963e233525a795293765d3d4c0d2c76b09ba60b7c8"
+      "sha256": "6d2881ae0fcea3ee664b830d2c100350dc61f56b23a66e1caa70015bad49fbdc"
     },
     {
       "path": "plugins/requirements-center/tickets.swtool.html",
@@ -144,13 +144,13 @@
     },
     {
       "path": "release/releases.json",
-      "size": 3790,
-      "sha256": "00a36871a75f1fda67db3b4a58bc0945c690008151bbd64c794536d1332ffc7d"
+      "size": 4368,
+      "sha256": "ccc6d7f3510c7540a64565191117b1aa37a45a3638f079843ad0343a0739625d"
     },
     {
       "path": "web/index.html",
-      "size": 6316,
-      "sha256": "dd0ef3e3f7178dcb2ca0fec9ee3387148e7d2f1c61ea594c3eb7bdaad60324cc"
+      "size": 6323,
+      "sha256": "5d83dd1f848af4cee859101ac533efe2f2e0e776b904c3ac65b8a6803fbcb818"
     },
     {
       "path": "web/plugin-manager.css",
@@ -199,13 +199,13 @@
     },
     {
       "path": "web/requirements-hub.css",
-      "size": 30602,
-      "sha256": "859cd851a6ebda9fa122c7c11810067bac59f96cac1f0e4ca56e7d8428e436e1"
+      "size": 30677,
+      "sha256": "d289334575e3009823b74a818a2f0108099fac9414f45dd49b8c8676f4de397b"
     },
     {
       "path": "web/requirements-hub.html",
-      "size": 14949,
-      "sha256": "6677109c88052abef099cbf2db94e5d830301a373655178cdb9a8b624e32ed30"
+      "size": 14956,
+      "sha256": "f636b2073eb7181aa0527a7ad91ede463913cd944af28c49bbc19ccfa8bede6a"
     },
     {
       "path": "web/requirements-center-create.html",
@@ -214,8 +214,8 @@
     },
     {
       "path": "web/requirements-center.html",
-      "size": 6316,
-      "sha256": "dd0ef3e3f7178dcb2ca0fec9ee3387148e7d2f1c61ea594c3eb7bdaad60324cc"
+      "size": 6323,
+      "sha256": "5d83dd1f848af4cee859101ac533efe2f2e0e776b904c3ac65b8a6803fbcb818"
     },
     {
       "path": "web/requirements-hub.js",
@@ -841,8 +841,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "size": 1490,
-      "sha256": "78d90e3400b6e11fd1e7c944457c6d337cd1742aa34a6c3859a64035beba9919"
+      "size": 1601,
+      "sha256": "2b53ee30e834ac5597f38e8850e8c014a494815af5fd04f6165a0bb74845c9de"
     },
     {
       "path": "CODE_OF_CONDUCT.md",

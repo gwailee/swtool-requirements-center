@@ -1,7 +1,19 @@
 {
   "format": 1,
-  "current_version": "1.4.0",
+  "current_version": "1.4.1",
   "releases": [
+    {
+      "platform": "source",
+      "version": "1.4.1",
+      "released_at": "2026-11-07",
+      "features": [
+        "修复父工单选择区的 grid 样式覆盖 hidden，确保默认收缩及再次收起生效"
+      ],
+      "notes": "父工单选择区隐藏时强制不显示，展开后保留网格布局；插件与独立版同步修复。下载源码 ZIP 后按指南部署；正式交付以同版 GitHub 标签和 Release 为准。",
+      "url": "https://swtool.com/plugins/requirements-center/api/tools/source",
+      "sha256": null,
+      "size": null
+    },
     {
       "platform": "source",
       "version": "1.4.0",
