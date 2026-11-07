@@ -1,7 +1,21 @@
 {
   "format": 1,
-  "current_version": "1.4.5",
+  "current_version": "1.4.6",
   "releases": [
+    {
+      "platform": "source",
+      "version": "1.4.6",
+      "released_at": "2026-11-07",
+      "features": [
+        "修复展开按钮被通用卡片样式撑满，父工单标题恢复可见",
+        "父子工单每级统一缩进20px，卡片右侧保持对齐",
+        "标题卡片为44px展开按钮保留空间，兼容窄屏触控"
+      ],
+      "notes": "修复展开按钮被通用卡片样式撑满并遮住父工单标题；父子工单每级统一缩进20px，卡片右侧保持对齐，标题为44px展开按钮保留空间。插件与独立版同步修复。下载源码 ZIP 后按指南部署；正式交付以同版 GitHub 标签和 Release 为准。",
+      "url": "https://swtool.com/plugins/requirements-center/api/tools/source",
+      "sha256": null,
+      "size": null
+    },
     {
       "platform": "source",
       "version": "1.4.5",
