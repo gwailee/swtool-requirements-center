@@ -1,7 +1,21 @@
 {
   "format": 1,
-  "current_version": "1.4.7",
+  "current_version": "1.4.8",
   "releases": [
+    {
+      "platform": "source",
+      "version": "1.4.8",
+      "released_at": "2026-11-07",
+      "features": [
+        "详情操作按钮简化为“编辑”“撤回”“新增子需求”",
+        "详情操作顺序统一为编辑、撤回、新增子需求",
+        "插件与独立版同步，保持原有权限及手机触控布局"
+      ],
+      "notes": "需求详情操作按钮名称与顺序调整为“编辑”“撤回”“新增子需求”，保留原有权限和交互。插件与独立版同步。下载源码 ZIP 后按指南部署；正式交付以同版 GitHub 标签和 Release 为准。",
+      "url": "https://swtool.com/plugins/requirements-center/api/tools/source",
+      "sha256": null,
+      "size": null
+    },
     {
       "platform": "source",
       "version": "1.4.7",

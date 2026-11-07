@@ -55,7 +55,7 @@
     {
       "path": "plugins/requirements-center/plugin.json",
       "size": 948,
-      "sha256": "5dbfac854e9f2159cfbcc7df3ad2a2f5b5dfc6bbc2f1b43a01219c69eeb0145e"
+      "sha256": "aab5661ec52399a338ff48fdcbeb645af8da9c7dcc04c1ee4b35cd2efacc638b"
     },
     {
       "path": "plugins/requirements-center/tickets.swtool.html",
@@ -144,13 +144,13 @@
     },
     {
       "path": "release/releases.json",
-      "size": 8657,
-      "sha256": "79edc3ec3ca02f01f84e5183e817a712c10666baec033961b19643b64cd1326c"
+      "size": 9408,
+      "sha256": "106293d91f1e9d78c002ee3887d087bd2502710a86ef2426188c7709a68ea29d"
     },
     {
       "path": "web/index.html",
-      "size": 6342,
-      "sha256": "9493a0e94acd39c9a1589563f253d6b8d20a1f95b4a630a4e2b774f4adee1416"
+      "size": 6334,
+      "sha256": "3a60abb8389aa90b2182a92b150543bc78357082429ec848daa4e3ac34ff30f2"
     },
     {
       "path": "web/plugin-manager.css",
@@ -174,8 +174,8 @@
     },
     {
       "path": "web/requirements-guide.html",
-      "size": 2075,
-      "sha256": "9492ab21633dfff81155f52e35116f165802cfaf570def465218138a173f67f4"
+      "size": 2073,
+      "sha256": "fa5fcdd69012936f2a42186783363bb6c9ec4253ae29c966b89d70945f0edadd"
     },
     {
       "path": "web/requirements-guide.js",
@@ -204,23 +204,23 @@
     },
     {
       "path": "web/requirements-hub.html",
-      "size": 14978,
-      "sha256": "44a899c09fe8fbfcba180c2ab435f8d2e44d469b96113831269763b4e9bf1490"
+      "size": 14968,
+      "sha256": "ff64dc5b18e9db63fae2d1b796d33a518a0b9491083c91f75b1b8bbeefdea547"
     },
     {
       "path": "web/requirements-center-create.html",
-      "size": 5403,
-      "sha256": "fa1d8b8b2c392ea39fc22ea3bb0be0515cdcef5e9bb4e93b2d72ddd1ee310e0a"
+      "size": 5393,
+      "sha256": "5cd317cc924417eaabce9ee4ddce2a2aa8eba6b8919cb6bf120a6145727c8ea9"
     },
     {
       "path": "web/requirements-center.html",
-      "size": 6342,
-      "sha256": "9493a0e94acd39c9a1589563f253d6b8d20a1f95b4a630a4e2b774f4adee1416"
+      "size": 6334,
+      "sha256": "3a60abb8389aa90b2182a92b150543bc78357082429ec848daa4e3ac34ff30f2"
     },
     {
       "path": "web/requirements-hub.js",
-      "size": 123496,
-      "sha256": "4b7f3641c465a41ff9c95b9d1ca1017f6c99c2df28ea524e4c23a7cb50350a64"
+      "size": 123484,
+      "sha256": "d2a460665b15118fab9adfcd6ed668ead93aae6e8ad29617173230a46617adb0"
     },
     {
       "path": "web/requirements-release.js",
@@ -841,8 +841,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "size": 2776,
-      "sha256": "446669cc0d0372e271c5662b287db6026546635833b0fe88ba1256be2e45e0db"
+      "size": 2973,
+      "sha256": "3ff9c37b167865f0b89f4f91163c9c5011d08c160078b7e86107c5185e71d609"
     },
     {
       "path": "CODE_OF_CONDUCT.md",

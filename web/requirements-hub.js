@@ -1353,7 +1353,7 @@ async function openTicket(id) {
   detail.innerHTML =
     '<div class="hub-ticket-heading"><div id="hub-title-status" class="hub-title-status"></div><h2>' +
     esc(item.title) +
-    '</h2><div id="hub-title-actions" class="hub-title-actions"><button id="hub-edit" type="button">编辑需求</button></div></div><p class="hub-platforms"><strong>关联平台：</strong>' +
+    '</h2><div id="hub-title-actions" class="hub-title-actions"><button id="hub-edit" type="button">编辑</button></div></div><p class="hub-platforms"><strong>关联平台：</strong>' +
     esc((Array.isArray(item.platforms) ? item.platforms : (item.platform ? [item.platform] : [])).map((value) => ({h5_mobile:"H5",pc_browser:"PC浏览器",android:"安卓",windows:"Windows",ios:"iOS手机",mac:"iOS电脑",linux:"Linux",embedded:"嵌入式",other:"其他"}[value] || value)).concat(item.custom_platform ? [item.custom_platform] : []).join("、") || "未指定") +
     '</p><p class="muted">提交人 ' +
     esc(item.author_username) +
@@ -1418,8 +1418,12 @@ async function openTicket(id) {
     titleStatus.append(Object.assign(document.createElement("span"), {className: "hub-status " + String(item.status || ""), textContent: states[item.status] || item.status || ""}));
   }
   const titleActions = el("hub-title-actions");
+  el("hub-edit").onclick = safe(() => editForm(item));
+  el("hub-edit").hidden = !canEdit(item);
+  const withdraw=document.createElement('button');withdraw.id='hub-withdraw';withdraw.textContent=item.status==='withdrawn'?'重新提交':'撤回';withdraw.onclick=safe(()=>toggleWithdrawal(item));titleActions?.append(withdraw);
+  withdraw.hidden = !canEdit(item);
   if (canWrite()) {
-    const child = document.createElement("button"); child.id = "hub-add-child"; child.type = "button"; child.textContent = "新增子工单";
+    const child = document.createElement("button"); child.id = "hub-add-child"; child.type = "button"; child.textContent = "新增子需求";
     const context = JSON.stringify([hub.generation, hub.center, hub.localCenter?.id || ""]);
     child.onclick = safe(() => {
       if (!canWrite() || hub.selected !== item.id || context !== JSON.stringify([hub.generation, hub.center, hub.localCenter?.id || ""])) throw Error("中心或工单已切换，请重新打开详情。");
@@ -1427,10 +1431,6 @@ async function openTicket(id) {
     });
     titleActions?.append(child);
   }
-  el("hub-edit").onclick = safe(() => editForm(item));
-  el("hub-edit").hidden = !canEdit(item);
-  const withdraw=document.createElement('button');withdraw.id='hub-withdraw';withdraw.textContent=item.status==='withdrawn'?'重新提交':'撤回需求';withdraw.onclick=safe(()=>toggleWithdrawal(item));titleActions?.append(withdraw);
-  withdraw.hidden = !canEdit(item);
   if (item.status === 'withdrawn' && canEdit(item)) {
     const purge = document.createElement('button');
     purge.id = 'hub-purge';purge.textContent = '彻底清理';purge.onclick = safe(() => purgeTicket(item));titleActions?.append(purge);
