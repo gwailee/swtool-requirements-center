@@ -279,7 +279,7 @@ def _initialize_database_schema(con, postgres: bool):
     for column in ("reproduction_steps", "expected_result"):
         con.execute(f"ALTER TABLE issues ADD COLUMN IF NOT EXISTS {column} TEXT NOT NULL DEFAULT ''")
     _merge_closed_issue_status(con)
-    con.execute("INSERT INTO issue_status_events(issue_id,from_status,to_status,changed_by,changed_at) SELECT i.id,NULL,i.status,i.author_id,? FROM issues i WHERE NOT EXISTS (SELECT 1 FROM issue_status_events e WHERE e.issue_id=i.id)", (time.time(),))
+    con.execute("INSERT INTO issue_status_events(issue_id,from_status,to_status,changed_by,changed_at) SELECT i.id,NULL,i.status,i.author_id,? FROM issues i WHERE i.status<>'withdrawn' AND NOT EXISTS (SELECT 1 FROM issue_status_events e WHERE e.issue_id=i.id)", (time.time(),))
     con.commit()
     return con
 
@@ -1202,6 +1202,108 @@ def _schedule_case_directory_sync():
 
     threading.Thread(target=run_sync, name="swtool-case-directory-sync", daemon=True).start()
     return True
+
+
+_requirements_retention_stop = threading.Event()
+_requirements_retention_thread = None
+_requirements_retention_cursor = ""
+
+
+def _requirements_delete_rows(con, ticket_id):
+    paths = [item["stored_path"] for item in con.execute("SELECT stored_path FROM issue_attachments WHERE issue_id=?", (ticket_id,)).fetchall()]
+    con.execute("DELETE FROM issue_attachments WHERE issue_id=?", (ticket_id,))
+    con.execute("DELETE FROM issue_comments WHERE issue_id=?", (ticket_id,))
+    con.execute("DELETE FROM issue_status_events WHERE issue_id=?", (ticket_id,))
+    con.execute("DELETE FROM issues WHERE id=?", (ticket_id,))
+    return paths
+
+
+def _requirements_cleanup_paths(paths):
+    attachment_root = (DATA_DIR / "requirements_attachments").resolve()
+    con = db()
+    try:
+        for stored_path in paths:
+            # Another ticket may reference the same physical blob.
+            if con.execute("SELECT 1 FROM issue_attachments WHERE stored_path=? LIMIT 1", (stored_path,)).fetchone():
+                continue
+            path = Path(stored_path)
+            try:
+                if not path.is_symlink() and path.resolve().is_relative_to(attachment_root):
+                    path.unlink(missing_ok=True)
+            except OSError:
+                pass
+    finally:
+        con.close()
+
+
+def cleanup_requirements_trash(now=None, limit=100):
+    global _requirements_retention_cursor
+    from server.requirements_retention_policy import retention_days, expiry_reason
+    days = retention_days()
+    now = time.time() if now is None else now
+    stats = {"deleted": 0, "failed": 0}
+    _requirements_guard()
+    con = db()
+    paths = []
+    try:
+        # Lock selection and recheck status/events in the same transaction. Every
+        # worker uses row locks; skipped locks are left for a later hourly sweep.
+        rows = con.execute("SELECT id,author_id FROM issues WHERE status='withdrawn' AND id>? ORDER BY id LIMIT ? FOR UPDATE SKIP LOCKED", (_requirements_retention_cursor, max(1, min(int(limit), 100)))).fetchall()
+        for row in rows:
+            con.execute("SAVEPOINT retention_ticket")
+            try:
+                event = con.execute("SELECT from_status,to_status,changed_at FROM issue_status_events WHERE issue_id=? ORDER BY id DESC LIMIT 1", (row["id"],)).fetchone()
+                stamp = event["changed_at"] if event and event["from_status"] is not None and event["to_status"] == 'withdrawn' else None
+                reason = expiry_reason(stamp, now, days)
+                if reason != 'expired':
+                    stats["skipped_" + reason] = stats.get("skipped_" + reason, 0) + 1
+                else:
+                    pending = _requirements_delete_rows(con, row["id"])
+                    audit(con, None, "requirement_auto_delete", row["id"], "retention_expired")
+                    paths.extend(pending)
+                    stats["deleted"] += 1
+                con.execute("RELEASE SAVEPOINT retention_ticket")
+            except Exception:
+                con.execute("ROLLBACK TO SAVEPOINT retention_ticket")
+                con.execute("RELEASE SAVEPOINT retention_ticket")
+                stats["failed"] += 1
+        con.commit()
+        _requirements_retention_cursor = rows[-1]["id"] if rows else ""
+    except BaseException:
+        con.rollback()
+        raise
+    finally:
+        con.close()
+    if paths:
+        _requirements_cleanup_paths(paths)
+    return stats
+
+
+def _run_requirements_retention():
+    while not _requirements_retention_stop.is_set():
+        try:
+            stats = cleanup_requirements_trash()
+            logging.getLogger(__name__).info("requirements retention counts=%s", stats)
+        except Exception:
+            logging.getLogger(__name__).warning("requirements retention sweep failed")
+        _requirements_retention_stop.wait(3600)
+
+
+@app.on_event("startup")
+def start_requirements_retention():
+    global _requirements_retention_thread
+    if _requirements_retention_thread and _requirements_retention_thread.is_alive():
+        return
+    _requirements_retention_stop.clear()
+    _requirements_retention_thread = threading.Thread(target=_run_requirements_retention, name="requirements-retention", daemon=True)
+    _requirements_retention_thread.start()
+
+
+@app.on_event("shutdown")
+def stop_requirements_retention():
+    _requirements_retention_stop.set()
+    if _requirements_retention_thread:
+        _requirements_retention_thread.join(timeout=5)
 
 
 @app.on_event("startup")
@@ -6246,11 +6348,7 @@ def delete_ticket(ticket_id: str, user=Depends(current_issue_user)):
             raise HTTPException(403, "无权删除该需求")
         if row["status"] != "withdrawn":
             raise HTTPException(409, "仅可永久删除回收站中的需求")
-        paths = [item["stored_path"] for item in con.execute("SELECT stored_path FROM issue_attachments WHERE issue_id=?", (ticket_id,)).fetchall()]
-        con.execute("DELETE FROM issue_attachments WHERE issue_id=?", (ticket_id,))
-        con.execute("DELETE FROM issue_comments WHERE issue_id=?", (ticket_id,))
-        con.execute("DELETE FROM issue_status_events WHERE issue_id=?", (ticket_id,))
-        con.execute("DELETE FROM issues WHERE id=?", (ticket_id,))
+        paths = _requirements_delete_rows(con, ticket_id)
         audit(con, user["id"], "requirement_delete", ticket_id, "withdrawn")
         con.commit()
     except BaseException:
@@ -6258,14 +6356,7 @@ def delete_ticket(ticket_id: str, user=Depends(current_issue_user)):
         raise
     finally:
         con.close()
-    attachment_root = (DATA_DIR / "requirements_attachments").resolve()
-    for stored_path in paths:
-        path = Path(stored_path)
-        try:
-            if not path.is_symlink() and path.resolve().is_relative_to(attachment_root):
-                path.unlink(missing_ok=True)
-        except OSError:
-            pass
+    _requirements_cleanup_paths(paths)
     return {"deleted": True, "id": ticket_id}
 
 @app.post("/api/tickets/{ticket_id}/comments")

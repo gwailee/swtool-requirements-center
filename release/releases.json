@@ -1,7 +1,21 @@
 {
   "format": 1,
-  "current_version": "1.4.8",
+  "current_version": "1.4.9",
   "releases": [
+    {
+      "platform": "source",
+      "version": "1.4.9",
+      "released_at": "2026-11-09",
+      "features": [
+        "撤回工单默认保留 7 天，按小时分批清理回收站",
+        "恢复后重新撤回重新计时，缺失或异常时间保留待管理员确认",
+        "主站、个人中心与独立版共用保留策略，插件禁用停止处理"
+      ],
+      "notes": "回收站默认保留 7 天，可通过 SWTOOL_REQUIREMENTS_TRASH_RETENTION_DAYS 配置正整数天数。每小时最多清理 100 条，缺失、非法或未来撤回时间不自动删除；不补造旧数据时间。独立版合成时间不参与过期删除。正式交付以同版 GitHub 标签和 Release 为准。",
+      "url": "https://swtool.com/plugins/requirements-center/api/tools/source",
+      "sha256": null,
+      "size": null
+    },
     {
       "platform": "source",
       "version": "1.4.8",

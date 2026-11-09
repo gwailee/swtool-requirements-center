@@ -4,8 +4,8 @@
   "files": [
     {
       "path": "README.md",
-      "size": 12597,
-      "sha256": "7d2cf711c8fb704a06e9883ffb03dd0ab847f57c9d0f3bee791b21c9e0e96472"
+      "size": 13346,
+      "sha256": "67849dd62854a9285818d5855e7df1d8f485ec4bfad81bf474d68298b1c38594"
     },
     {
       "path": "SOURCE_NOTES.md",
@@ -55,7 +55,7 @@
     {
       "path": "plugins/requirements-center/plugin.json",
       "size": 948,
-      "sha256": "aab5661ec52399a338ff48fdcbeb645af8da9c7dcc04c1ee4b35cd2efacc638b"
+      "sha256": "31b16f99ab49f72fdd670eef5f060a5bc0e852014b750c37a5615db3299fa8a8"
     },
     {
       "path": "plugins/requirements-center/tickets.swtool.html",
@@ -84,8 +84,13 @@
     },
     {
       "path": "server/app.py",
-      "size": 437106,
-      "sha256": "6973eb756f60655383b60bb4e022ddfce3c16de8ba3807460ccfffdd4e80ff42"
+      "size": 440889,
+      "sha256": "379b4fbeedf6fa294f56d0286d44ecb16b49c67dd6403a308fab8ab94b3e35a5"
+    },
+    {
+      "path": "server/requirements_retention_policy.py",
+      "size": 1660,
+      "sha256": "bd0ac2e14eb3ebb34174f7ed516b82892060982caeeab8470feaf4e2c719ee4e"
     },
     {
       "path": "server/plugin_runtime.py",
@@ -144,13 +149,13 @@
     },
     {
       "path": "release/releases.json",
-      "size": 9408,
-      "sha256": "106293d91f1e9d78c002ee3887d087bd2502710a86ef2426188c7709a68ea29d"
+      "size": 10255,
+      "sha256": "ba3dc5f3d200122a6f3d82ccc6a4cc88cf51230adf0e703ed7d4094ab962a598"
     },
     {
       "path": "web/index.html",
       "size": 6334,
-      "sha256": "3a60abb8389aa90b2182a92b150543bc78357082429ec848daa4e3ac34ff30f2"
+      "sha256": "a7b33229e3a51e173fd9d1c548de23c1282a911f4eaac306da82552f774a22ac"
     },
     {
       "path": "web/plugin-manager.css",
@@ -215,7 +220,7 @@
     {
       "path": "web/requirements-center.html",
       "size": 6334,
-      "sha256": "3a60abb8389aa90b2182a92b150543bc78357082429ec848daa4e3ac34ff30f2"
+      "sha256": "a7b33229e3a51e173fd9d1c548de23c1282a911f4eaac306da82552f774a22ac"
     },
     {
       "path": "web/requirements-hub.js",
@@ -841,8 +846,8 @@
     },
     {
       "path": "CHANGELOG.md",
-      "size": 2973,
-      "sha256": "3ff9c37b167865f0b89f4f91163c9c5011d08c160078b7e86107c5185e71d609"
+      "size": 3385,
+      "sha256": "6c336f4e524fc21a30d8968abcffcf4164badda2c22c32582c75aa7700122f81"
     },
     {
       "path": "CODE_OF_CONDUCT.md",
