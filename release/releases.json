@@ -1,7 +1,21 @@
 {
   "format": 1,
-  "current_version": "1.4.9",
+  "current_version": "1.4.10",
   "releases": [
+    {
+      "platform": "source",
+      "version": "1.4.10",
+      "released_at": "2026-11-09",
+      "features": [
+        "点击列表标题先显示当前授权列表中的真实标题与正文",
+        "完整详情后台补齐权限、回复、附件与历史",
+        "快速切换隔离响应，权限失败清除预览，保护编辑草稿"
+      ],
+      "notes": "优化 Hub 与兼容列表的详情响应。首屏只读真实正文来自当前授权列表，不用占位文本代替内容；完整详情仍由服务端校验。100ms 为目标，具体性能以验证记录为准。正式交付以同版 GitHub 标签和 Release 为准。",
+      "url": "https://swtool.com/plugins/requirements-center/api/tools/source",
+      "sha256": null,
+      "size": null
+    },
     {
       "platform": "source",
       "version": "1.4.9",

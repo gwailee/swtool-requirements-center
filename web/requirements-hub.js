@@ -54,6 +54,7 @@ const el = (id) => document.getElementById(id),
 const originalDetailHome = el("hub-detail")?.parentElement;
 const detailHome = () => originalDetailHome;
 function placeMobileDetail() {
+  const reveal = arguments[0] === true;
   const detail = el("hub-detail");
   const home = detailHome();
   if (!detail || !home) return;
@@ -66,6 +67,10 @@ function placeMobileDetail() {
     const row = selected.closest(".hub-ticket-row");
     (row || target).append(detail);
     detail.classList.add("hub-detail-inline");
+    // Moving a long inline detail can anchor the viewport to its former bottom.
+    // Reveal the clicked card synchronously so its title and first content line
+    // are visible, rather than restoring an obsolete absolute scroll position.
+    if (reveal) selected.scrollIntoView({block: "start", behavior: "instant"});
   } else {
     home.append(detail);
     detail.classList.remove("hub-detail-inline");
@@ -825,6 +830,9 @@ async function authenticate(kind) {
       return;
     }
     token = result.access_token;
+    resetDetail();
+    hub.currentItems = [];
+    hub.currentItemsContext = null;
     // Invalidate an automatic boot that may still be using the previous
     // account/session. Its late responses must not invalidate this login.
     hub.generation++;
@@ -852,6 +860,8 @@ function logout() {
   hub.center = "";
   hub.localCenter = null;
   hub.connections = [];
+  hub.currentItems = [];
+  hub.currentItemsContext = null;
   localStorage.removeItem("ws_token");
   localStorage.removeItem("ws_me");
   resetDetail();
@@ -982,6 +992,8 @@ async function switchCenter(id, localId = null) {
   window.SWToolRequirementActions?.close();
   hub.page = 1;
   hub.selected = "";
+  hub.currentItems = [];
+  hub.currentItemsContext = null;
   resetDetail();
   el("hub-list").replaceChildren();
   hub.identity = null;
@@ -1086,6 +1098,7 @@ async function loadList() {
   if (detail && home && detail.parentElement !== home) home.append(detail);
   list.replaceChildren();
   hub.currentItems = Array.isArray(data.items) ? data.items : [];
+  hub.currentItemsContext = [hub.generation, hub.center, hub.localCenter?.id || "", token];
   const visibleById = new Map(hub.currentItems.map((item) => [String(item.id), item]));
   const {children, ordered, parentIdOf} = buildTicketTree(hub.currentItems);
   const rendered = new Set();
@@ -1129,13 +1142,8 @@ async function loadList() {
     button.onclick = (event) => {
       event.preventDefault();
       event.stopPropagation();
-      const scrollX = window.scrollX, scrollY = window.scrollY;
-      safe(async () => {
-        await openTicket(item.id);
-        requestAnimationFrame(() => window.scrollTo(scrollX, scrollY));
-      })();
+      safe(() => openTicket(item.id))();
     };
-    button.addEventListener("click", () => { hub.selected = String(item.id); updateSortControls(); });
     if (canEdit(item)) window.SWToolRequirementActions?.bind(button,{label:item.status==='withdrawn'?'重新提交':'撤回需求',onAction:safe(()=>toggleWithdrawal(item))});
     row.append(button);
     const parentId = parentIdOf(item);
@@ -1324,29 +1332,54 @@ async function purgeTicket(item) {
     return section;
   }
 
+function hasDetailDraft(detail) {
+  const form = detail.querySelector?.("#hub-comment-form");
+  return Boolean(form && (form.querySelector('textarea')?.value?.trim() ||
+    form.querySelector('input[type="file"]')?.files?.length ||
+    form.querySelector('.hub-pasted-files')?.children?.length));
+}
 async function openTicket(id) {
-  const detailGeneration = hub.generation, detailCenter = hub.center, detailLocal = hub.localCenter?.id || "";
+  const refresh = arguments[1]?.refresh === true;
+  const detailGeneration = hub.generation, detailCenter = hub.center, detailLocal = hub.localCenter?.id || "", detailSession = token;
+  const detail = el("hub-detail");
+  const keepDraft = !refresh && hub.selected === id && hasDetailDraft(detail);
+  if (hub.selected !== id && hasDetailDraft(detail) && !window.confirm("回复尚未提交，是否放弃并切换需求？")) return;
   const detailRequest = (hub.detailRequestSeq = (hub.detailRequestSeq || 0) + 1);
   hub.selected = id;
   updateSortControls();
-  const detail = el("hub-detail");
-  const requestCurrent = () => detailRequest === hub.detailRequestSeq && hub.selected === id && detailGeneration === hub.generation && detailCenter === hub.center && detailLocal === (hub.localCenter?.id || "");
-  resetDetail();
+  const requestCurrent = () => detailRequest === hub.detailRequestSeq && hub.selected === id && detailGeneration === hub.generation && detailCenter === hub.center && detailLocal === (hub.localCenter?.id || "") && detailSession === token;
+  const listContext = hub.currentItemsContext;
+  const preview = !keepDraft && listContext && listContext[0] === detailGeneration && listContext[1] === detailCenter && listContext[2] === detailLocal && listContext[3] === detailSession
+    ? hub.currentItems?.find(item => String(item.id) === String(id) && typeof item.description === "string") : null;
+  if (!keepDraft) {
+    resetDetail();
+    if (preview) {
+      // List content is already authorized. No form or write action exists until
+      // the authoritative detail response arrives; plain text paints immediately.
+      detail.innerHTML = '<div class="hub-ticket-heading"><h2>' + esc(preview.title) + '</h2></div><div class="hub-description" style="white-space:pre-wrap">' + esc(preview.description) + '</div><p class="muted hub-detail-loading" role="status">正在同步最新详情、回复与附件…</p>';
+    } else detail.innerHTML = '<p class="hub-detail-loading" role="status">正在加载需求…</p>';
+  }
   detail.setAttribute("aria-busy", "true");
-  detail.innerHTML = '<p class="hub-detail-loading" role="status">正在加载需求…</p>';
-  placeMobileDetail();
+  placeMobileDetail(!keepDraft);
   let item;
   try { item = await api("/api/tickets/" + encodeURIComponent(id)); }
   catch (error) {
     if (requestCurrent()) {
       detail.removeAttribute("aria-busy");
-      detail.innerHTML = '<p class="hub-detail-error" role="status">需求加载失败，请重试。</p>';
+      if ([401, 403, 404, 410].includes(Number(error.status)) || (!preview && !keepDraft)) {
+        resetDetail();
+        detail.innerHTML = '<p class="hub-detail-error" role="status">需求加载失败，请重试。</p>';
+      } else if (preview) {
+        const message = detail.querySelector(".hub-detail-loading");
+        if (message) message.textContent = "详情同步失败，请重新点击标题重试。";
+      }
     }
     if (!requestCurrent()) return;
     throw error;
   }
-  if (detailRequest !== hub.detailRequestSeq || hub.selected !== id || detailGeneration !== hub.generation || detailCenter !== hub.center || detailLocal !== (hub.localCenter?.id || "")) return;
+  if (!requestCurrent()) return;
   detail.removeAttribute("aria-busy");
+  if (keepDraft && hasDetailDraft(detail)) return;
   resetDetail();
   driverTicket = item;
   refreshDriverPanel();
@@ -1534,12 +1567,18 @@ async function openTicket(id) {
   const commentImages = canWrite() && !commentForm.hidden
     ? attachImagePaste(commentForm)
     : null;
-  let savedComment = null;
+  let savedComment = null, commentSubmitting = false;
   commentForm.onsubmit = (event) => {
     event.preventDefault();
-    safe(async () => {
-      const form = event.currentTarget,
-        body = form.elements.namedItem("body").value,
+    if (commentSubmitting) return;
+    const form = event.currentTarget;
+    const controls = [...form.querySelectorAll("input,textarea,button")].map(node => [node, node.disabled]);
+    const commentContext = [hub.generation, hub.center, hub.localCenter?.id || "", token];
+    commentSubmitting = true;
+    return safe(async () => {
+      controls.forEach(([node]) => { node.disabled = true; });
+      try {
+      const body = form.elements.namedItem("body").value,
         files = [...form.elements.namedItem("files").files],
         before = new Set((item.comments || []).map((x) => x.id));
       let updated = savedComment?.body === body ? {comments: [savedComment]} : await api(
@@ -1560,10 +1599,18 @@ async function openTicket(id) {
       savedComment = comment || null;
       if (commentImages) await commentImages.submit(upload, id, files, comment?.id);
       else await upload(id, files, comment?.id);
-      await openTicket(id);
+      if (!form.isConnected || hub.selected !== id || commentContext[0] !== hub.generation || commentContext[1] !== hub.center || commentContext[2] !== (hub.localCenter?.id || "") || commentContext[3] !== token) return;
+      form.reset();
+      commentImages?.clear();
+      savedComment = null;
+      await openTicket(id, {refresh: true});
       await loadList();
       window.SWToolRequirementsMilestones?.load();
-    })({ currentTarget: event.currentTarget.querySelector('button[type="submit"]') });
+      } finally {
+        controls.forEach(([node, disabled]) => { node.disabled = disabled; });
+        commentSubmitting = false;
+      }
+    })({ currentTarget: form.querySelector('button[type="submit"]') });
   };
   if (hub.localCenter) {
     const score = item.rating?.score ?? item.rating;
