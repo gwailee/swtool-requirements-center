@@ -1398,7 +1398,7 @@ async function openTicket(id) {
     esc(item.description) +
     "</div><p>" +
     esc((item.labels || []).join(" · ")) +
-    '</p><div id="hub-files"></div><h3>回复与补充</h3><div id="hub-comments"></div><form id="hub-comment-form"><label>回复内容<textarea name="body" required></textarea></label><label>回复附件<input name="files" type="file" multiple accept="image/*,.pdf,.txt,.csv,.zip,.json"></label><div class="hub-pasted-files" aria-label="粘贴的图片"></div><button type="submit" class="primary">提交回复</button></form><h3>状态历史</h3><div id="hub-history"></div>';
+    '</p><div id="hub-files"></div><h3>回复与补充</h3><div id="hub-comments"></div><form id="hub-comment-form"><label>回复内容<textarea name="body" required></textarea></label><label>添加附件（Ctrl+V可直接上传粘贴板截图）<input name="files" type="file" multiple accept="image/*,.pdf,.txt,.csv,.zip,.json"></label><div class="hub-pasted-files" aria-label="粘贴的图片"></div><button type="submit" class="primary">提交回复</button></form><h3>状态历史</h3><div id="hub-history"></div>';
   window.SwtoolTicketContent?.render(detail.querySelector(".hub-description"), item.description);
   const relationGeneration = hub.generation;
   const relationCurrent = () => relationGeneration === hub.generation && detailCenter === hub.center && detailLocal === (hub.localCenter?.id || "") && hub.selected === id;
@@ -1814,7 +1814,7 @@ async function editForm(item = null, parent = null) {
             .join("") +
           "</select></label>"
         : "") +
-      '<label>添加附件<input name="files" type="file" multiple accept="image/*,.pdf,.txt,.csv,.zip,.json"></label><div class="hub-pasted-files" aria-label="粘贴的图片"></div><button class="primary" type="submit">保存需求</button><p id="hub-editor-message" role="status"></p></form>',
+      '<label>添加附件（Ctrl+V可直接上传粘贴板截图）<input name="files" type="file" multiple accept="image/*,.pdf,.txt,.csv,.zip,.json"></label><div class="hub-pasted-files" aria-label="粘贴的图片"></div><button class="primary" type="submit">保存需求</button><p id="hub-editor-message" role="status"></p></form>',
   );
   const form = el("hub-editor");
   const editorContext = JSON.stringify([hub.generation, hub.center, hub.localCenter?.id || "", token]);

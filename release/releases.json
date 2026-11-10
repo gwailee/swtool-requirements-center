@@ -1,7 +1,20 @@
 {
   "format": 1,
-  "current_version": "1.4.10",
+  "current_version": "1.4.11",
   "releases": [
+    {
+      "platform": "source",
+      "version": "1.4.11",
+      "released_at": "2026-11-10",
+      "features": [
+        "新增需求与新增子需求附件入口提示 Ctrl+V 粘贴截图",
+        "回复附件入口使用同一提示，保留既有上传与粘贴行为"
+      ],
+      "notes": "改进附件入口提示的可发现性，统一为“添加附件（Ctrl+V可直接上传粘贴板截图）”；图片粘贴和上传能力沿用既有实现。正式交付以同版 GitHub 标签和 Release 为准。",
+      "url": "https://swtool.com/plugins/requirements-center/api/tools/source",
+      "sha256": null,
+      "size": null
+    },
     {
       "platform": "source",
       "version": "1.4.10",
