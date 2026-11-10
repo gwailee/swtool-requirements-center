@@ -47,7 +47,7 @@ mindmap
       标签和预计日期
       关联匿名用例
       图片和其他附件
-    互联与 API
+    中心互联
       我的 Key
       远端中心
     Release 交付
@@ -129,7 +129,7 @@ $$
 \text{解决率}=\frac{\text{已解决需求数}}{\text{总需求数}}\times100\%
 $$
 
-## 5 · 两个中心互联
+## 5 · 中心互联
 
 ```mermaid
 sequenceDiagram
@@ -146,11 +146,13 @@ sequenceDiagram
     A-->>B: 按 A 当前账号权限返回结果
 ```
 
+从 Hub 的“中心互联”入口进入，生成或管理个人 Key，并添加远端中心；宿主插件还可在此添加近端中心，提交创建表单时使用“创建中心”按钮。
+
 只复制 Key 到可信中心。A 也可添加 B，步骤相同；无需同步数据库。
 
 ```mermaid
 flowchart TD
-    A[互联与 API] --> B[生成 Key]
+    A[中心互联] --> B[生成 Key]
     B --> C[眼睛查看或复制]
     C --> D[在另一中心添加网址与 Key]
     D --> E[选择目标中心]
@@ -218,7 +220,7 @@ flowchart LR
 
 ### 使用 API + Key 操作需求
 
-在“互联与 API”中生成个人 Key，选择 `tickets:read` 或 `tickets:write` 作用域，并在请求头中携带：
+在“中心互联”中生成个人 Key，选择 `tickets:read` 或 `tickets:write` 作用域，并在请求头中携带：
 
 ```http
 Authorization: Bearer <Key>

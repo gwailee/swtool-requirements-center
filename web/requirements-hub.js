@@ -1023,7 +1023,7 @@ async function switchCenter(id, localId = null) {
   } catch (error) {
     if (generation !== hub.generation || session !== token || isWorkspaceChanged(error)) return;
     notify(error.message);
-    el("hub-identity").textContent = "连接失败，可在“创建中心”重新配置";
+    el("hub-identity").textContent = "连接失败，可在“中心互联”重新配置";
     await refreshDriverPanel();
   }
 }
@@ -1983,7 +1983,7 @@ async function settings() {
   const panel = el("hub-settings-panel");
   panel.hidden = false;
   panel.innerHTML =
-    '<h2>创建中心</h2><p><a href="' + hubHomePath + '">返回需求 Hub</a></p>' +
+    '<h2>中心互联</h2><p><a href="' + hubHomePath + '">返回需求 Hub</a></p>' +
     (hostBridge ? '<h3>近端中心</h3><p>数据由服务器保存，创建者拥有该中心的管理权限。</p><button id="hub-local-add">添加近端中心</button><button id="hub-local-retry">刷新近端中心</button><p id="hub-local-message" role="status"></p><div id="hub-local-centers"></div>' : '') +
     '<h3>我的个人 Key</h3><p class="muted">Key 权限以服务器授权为准；可通过查看恢复，旧版不可恢复的 Key 请轮换。请仅通过可信渠道交给目标中心。</p><input id="hub-key-value" readonly aria-label="个人 Key" value="' +
       (info.exists ? "•••••• · " + esc(info.suffix) : "尚未生成") +

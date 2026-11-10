@@ -1,7 +1,20 @@
 {
   "format": 1,
-  "current_version": "1.4.11",
+  "current_version": "1.4.12",
   "releases": [
+    {
+      "platform": "source",
+      "version": "1.4.12",
+      "released_at": "2026-11-10",
+      "features": [
+        "Hub 导航与配置页面统一命名为“中心互联”",
+        "连接提示、使用指南与独立版源码同步，保留近端中心的创建操作"
+      ],
+      "notes": "将承载个人 Key、远端连接和近端中心管理的入口统一命名为“中心互联”；真实创建近端中心的提交按钮仍为“创建中心”。插件与独立版源码同步。正式交付以同版 GitHub 标签和 Release 为准。",
+      "url": "https://swtool.com/plugins/requirements-center/api/tools/source",
+      "sha256": null,
+      "size": null
+    },
     {
       "platform": "source",
       "version": "1.4.11",
