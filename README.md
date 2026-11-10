@@ -165,7 +165,7 @@ Key 创建、轮换、撤销、连接管理和管理员全站归档仅支持本�
 
 ## 参与与安全
 
-开发环境、测试入口和 PR 检查见 [CONTRIBUTING.md](CONTRIBUTING.md)。请通过 Issue 报告普通问题；漏洞请遵循 [SECURITY.md](SECURITY.md) 私下报告。源码发布和校验流程见 `.github/workflows/release.yml`，下载后应核对随附 SHA-256。
+开发环境、测试入口和 PR 检查见 [CONTRIBUTING.md](CONTRIBUTING.md)。请通过 Issue 报告普通问题；漏洞请遵循 [SECURITY.md](SECURITY.md) 私下报告。安全公开导出仓库的源码发布和校验流程见 `.github/workflows/release.yml`；其校验脚本要求公开导出后的完整清单及 `public_metadata`，不能直接套用于主仓原始 standalone 清单。主仓在线源码归档由 `export_source.py` 按原始清单生成。1.4.11 因 workflow dispatch 权限受限，使用官方 Release API 发布，不代表该 workflow 或 CI 已通过；下载后应核对随附 SHA-256。
 
 归档兼容性：全站 CSV 归档支持 API 创建的待审核（pending）工单及其状态历史；恢复仍要求显式账号映射，并校验未知状态、关联、重复 ID 与附件完整性。
 
