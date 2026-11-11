@@ -1,7 +1,21 @@
 {
   "format": 1,
-  "current_version": "1.4.12",
+  "current_version": "1.5.0",
   "releases": [
+    {
+      "platform": "source",
+      "version": "1.5.0",
+      "released_at": "2026-11-11",
+      "features": [
+        "需求、回复与子需求支持多文件队列，显示逐文件与总体进度并可取消",
+        "附件分片上传，默认单文件上限 1 GiB（1073741824 字节），权限与归属继续校验",
+        "新发行版本 minor/patch 最大为 9，超过后向上进位"
+      ],
+      "notes": "主插件与独立版同步附件上传能力。宿主旧在线 JSON 归档保持原有容量限制；含大附件须连同数据库及附件目录备份。正式交付以同版源码 ZIP 和发布验收为准。",
+      "url": "https://swtool.com/plugins/requirements-center/api/tools/source",
+      "sha256": null,
+      "size": null
+    },
     {
       "platform": "source",
       "version": "1.4.12",

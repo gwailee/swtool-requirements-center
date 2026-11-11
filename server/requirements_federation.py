@@ -3,6 +3,8 @@
 # 软工云（swtool.com）开发团队；uqtool@163.com
 """User-scoped requirements keys and an allowlisted server-to-server gateway."""
 from __future__ import annotations
+import threading
+import time
 import base64
 from contextlib import contextmanager
 import hashlib
@@ -125,6 +127,8 @@ def allowed(method, path, scope='tickets:read'):
                 or bool(re.fullmatch(r'api/tickets/[A-Za-z0-9_-]+/attachments/[A-Za-z0-9_-]+', path)))
     if scope != 'tickets:write':
         return False
+    if re.fullmatch(r'api/tickets/[A-Za-z0-9_-]+/attachment-uploads(?:/[A-Za-z0-9_-]+(?:/(?:chunks|complete))?)?', path):
+        return method in ('POST', 'DELETE')
     if method == 'POST':
         return path == 'api/tickets' or bool(re.fullmatch(r'api/tickets/[A-Za-z0-9_-]+/(comments|attachments)', path))
     return method in ('PATCH', 'DELETE') and bool(re.fullmatch(
@@ -132,7 +136,51 @@ def allowed(method, path, scope='tickets:read'):
     ))
 
 
+_ATTACHMENT_DOWNLOAD_SLOTS = threading.BoundedSemaphore(4)
+_ATTACHMENT_OUTPUTS = set()
+_ATTACHMENT_OUTPUT_LOCK = threading.Lock()
+
+
+def cleanup_remote_output(output):
+    try:
+        output.unlink(missing_ok=True)
+    finally:
+        with _ATTACHMENT_OUTPUT_LOCK:
+            held = str(output) in _ATTACHMENT_OUTPUTS
+            _ATTACHMENT_OUTPUTS.discard(str(output))
+        if held: _ATTACHMENT_DOWNLOAD_SLOTS.release()
+
+
+class RemoteFileResponse(FileResponse):
+    async def __call__(self, scope, receive, send):
+        try:
+            await super().__call__(scope, receive, send)
+        finally:
+            cleanup_remote_output(Path(self.path))
+
+
+
 def remote_request(base, key, method, path, query='', body=None, content_type=None):
+    attachment = method == 'GET' and bool(re.fullmatch(r'api/tickets/[A-Za-z0-9_-]+/attachments/[A-Za-z0-9_-]+', path))
+    if attachment and not _ATTACHMENT_DOWNLOAD_SLOTS.acquire(blocking=False):
+        raise HTTPException(429, '附件下载繁忙，请稍后重试')
+    try:
+        result = _remote_request(base, key, method, path, query, body, content_type,
+                                 attachment=attachment, deadline=time.monotonic() + (300 if attachment else 60))
+        if attachment:
+            with _ATTACHMENT_OUTPUT_LOCK: _ATTACHMENT_OUTPUTS.add(str(result[0]))
+        return result
+    except BaseException:
+        if attachment: _ATTACHMENT_DOWNLOAD_SLOTS.release()
+        raise
+
+
+def _remote_request(base, key, method, path, query='', body=None, content_type=None, *, attachment=False, deadline):
+    def remaining():
+        left = deadline - time.monotonic()
+        if left <= 0: raise HTTPException(504, '远端响应超过总时限')
+        return min(60, left)
+
     base = normalize_url(base)
     parsed = urllib.parse.urlsplit(base)
     try:
@@ -168,7 +216,7 @@ def remote_request(base, key, method, path, query='', body=None, content_type=No
                                      data=body, headers=headers, method=method)
     opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect(), HTTPHandler(), HTTPSHandler())
     try:
-        response = opener.open(request, timeout=60)
+        response = opener.open(request, timeout=remaining())
     except urllib.error.HTTPError as exc:
         detail = '远端请求失败（HTTP %s）' % exc.code
         try:
@@ -181,11 +229,17 @@ def remote_request(base, key, method, path, query='', body=None, content_type=No
         raise HTTPException(502, '无法连接目标需求中心，请检查网址、网络和 HTTPS 证书') from None
     temp = tempfile.NamedTemporaryFile(prefix='swtool-remote-', delete=False)
     size = 0
-    limit = (513 * 1024 * 1024 if path == 'issues/export/zip' else
+    limit = (1024 ** 3 if attachment else 513 * 1024 * 1024 if path == 'issues/export/zip' else
              65536 if path == 'api/requirements/identity' else 12 * 1024 * 1024)
     try:
         with response, temp:
-            while chunk := response.read(1024 * 1024):
+            while True:
+                timeout = remaining()
+                sock = getattr(getattr(getattr(response, 'fp', None), 'raw', None), '_sock', None)
+                if sock is not None: sock.settimeout(timeout)
+                chunk = (getattr(response, 'read1', None) or response.read)(1024 * 1024)
+                remaining()
+                if not chunk: break
                 size += len(chunk)
                 if size > limit:
                     raise HTTPException(413, '远端响应超过限制')
@@ -325,12 +379,13 @@ def install_routes(host):
             count = 0
             async for chunk in request.stream():
                 count += len(chunk)
-                if count > 513 * 1024 * 1024: raise HTTPException(413, '请求超过 513 MiB')
+                if count > (2 * 1024 * 1024 if '/attachment-uploads' in path else 513 * 1024 * 1024): raise HTTPException(413, '请求超过 513 MiB')
                 body.write(chunk)
             body.seek(0)
             output, status, mime = await run_in_threadpool(remote_request, row['base_url'], key,
                 request.method, path, request.url.query, body if count else None, request.headers.get('content-type'))
         # Attachment MIME types are preserved; caller chooses a safe download name.
-        return FileResponse(output, status_code=status, media_type=mime,
-                            headers={'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff'},
-                            background=BackgroundTask(output.unlink, missing_ok=True))
+        return RemoteFileResponse(output, status_code=status, media_type=mime,
+                            headers={'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff',
+                                     'Content-Disposition': 'attachment'},
+                            background=BackgroundTask(cleanup_remote_output, output))

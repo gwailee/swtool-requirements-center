@@ -12,7 +12,6 @@ import math
 import os
 from pathlib import Path, PurePosixPath
 import secrets
-import shutil
 import stat
 import tempfile
 import threading
@@ -25,7 +24,8 @@ from starlette.background import BackgroundTask
 from starlette.concurrency import run_in_threadpool
 from starlette.responses import FileResponse
 
-LIMIT = 512 * 1024 * 1024
+LIMIT = 10 * 1024 * 1024 * 1024
+MAX_ATTACHMENT = 1024 * 1024 * 1024
 TABLES = {
     'issues': 'id title description labels case_id status author_id created_at updated_at expected_resolution_at resolved_at reproduction_steps expected_result'.split(),
     'issue_comments': 'id issue_id author_id body created_at'.split(),
@@ -72,7 +72,7 @@ def _directory_fd(path, create=False):
         raise
 
 
-def _attachment_bytes(root, stored_path, expected_size):
+def _stream_attachment(root, stored_path, expected_size, archive, entry):
     root = Path(os.path.abspath(root))
     path = Path(os.path.abspath(stored_path))
     relative = path.relative_to(root)
@@ -81,12 +81,20 @@ def _attachment_bytes(root, stored_path, expected_size):
         descriptor = os.open(relative.name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=directory)
         with os.fdopen(descriptor, 'rb') as stream:
             info = os.fstat(stream.fileno())
-            if not stat.S_ISREG(info.st_mode) or info.st_size != expected_size or expected_size > 10 * 1024 * 1024:
+            if not stat.S_ISREG(info.st_mode) or info.st_size != expected_size or not 0 <= expected_size <= MAX_ATTACHMENT:
                 raise ValueError('附件类型或大小不符')
-            content = stream.read(10 * 1024 * 1024 + 1)
-        if len(content) != expected_size:
+            digest = hashlib.sha256()
+            actual = 0
+            with archive.open(entry, 'w', force_zip64=True) as target:
+                while chunk := stream.read(1024 * 1024):
+                    actual += len(chunk)
+                    if actual > expected_size:
+                        raise ValueError('附件读取期间大小变化')
+                    digest.update(chunk)
+                    target.write(chunk)
+        if actual != expected_size:
             raise ValueError('附件读取期间大小变化')
-        return content
+        return digest.hexdigest()
     finally:
         os.close(directory)
 
@@ -110,13 +118,12 @@ def export_archive(host, actor):
             total = 0
             root = host.DATA_DIR / 'requirements_attachments'
             for row in rows['issue_attachments']:
-                content = _attachment_bytes(root, row.pop('stored_path'), row['size'])
-                total += len(content)
-                if total > LIMIT: raise ValueError('归档解压总量不能超过 512 MiB')
+                total += row['size']
+                if total > LIMIT: raise ValueError('归档解压总量不能超过 10 GiB')
                 entry = 'attachments/' + hashlib.sha256(row['id'].encode()).hexdigest()
-                row['archive_path'], row['sha256'] = entry, hashlib.sha256(content).hexdigest()
-                archive.writestr(entry, content)
-                manifest['files'][entry] = {'size': len(content), 'sha256': row['sha256']}
+                row['archive_path'] = entry
+                row['sha256'] = _stream_attachment(root, row.pop('stored_path'), row['size'], archive, entry)
+                manifest['files'][entry] = {'size': row['size'], 'sha256': row['sha256']}
             for table, fields in TABLES.items():
                 content = _csv_bytes(rows[table], fields)
                 total += len(content)
@@ -142,8 +149,10 @@ def _load(archive):
     entries = archive.infolist()
     names = [x.filename for x in entries]
     if len(entries) > 20000 or len(set(names)) != len(names): raise ValueError('归档条目重复或过多')
-    if sum(x.file_size for x in entries) > LIMIT: raise ValueError('归档解压总量不能超过 512 MiB')
+    if sum(x.file_size for x in entries) > LIMIT: raise ValueError('归档解压总量不能超过 10 GiB')
     for entry in entries:
+        maximum = MAX_ATTACHMENT if entry.filename.startswith('attachments/') else 32 * 1024 * 1024
+        if entry.file_size > maximum: raise ValueError('归档文件超过大小限制')
         path = PurePosixPath(entry.filename)
         if (path.is_absolute() or '..' in path.parts or '\\' in entry.filename
                 or str(path) != entry.filename or entry.is_dir()
@@ -158,11 +167,20 @@ def _load(archive):
     files = manifest.get('files')
     if not isinstance(files, dict) or set(names) != set(files) | {'manifest.json'}:
         raise ValueError('清单与归档文件不一致')
+    actual_total = archive.getinfo('manifest.json').file_size
     for name, check in files.items():
         if not isinstance(check, dict): raise ValueError('无效校验清单')
         digest = hashlib.sha256()
+        actual = 0
         with archive.open(name) as source:
-            while chunk := source.read(1024 * 1024): digest.update(chunk)
+            while chunk := source.read(1024 * 1024):
+                actual += len(chunk)
+                actual_total += len(chunk)
+                if actual > archive.getinfo(name).file_size or actual_total > LIMIT:
+                    raise ValueError('归档实际解压大小超限')
+                digest.update(chunk)
+        if actual != archive.getinfo(name).file_size:
+            raise ValueError('归档实际大小不匹配')
         if archive.getinfo(name).file_size != check.get('size') or digest.hexdigest() != check.get('sha256'):
             raise ValueError(f'文件校验失败：{name}')
     tables = {}
@@ -241,7 +259,7 @@ def _validate(tables, files):
                 if not all(string(row[k]) for k in ['original_name', 'mime_type', 'archive_path', 'sha256']): fail()
                 entry = row['archive_path']
                 if not entry.startswith('attachments/') or entry not in files or entry in paths: fail()
-                if type(row['size']) is not int or not 0 <= row['size'] <= 10 * 1024 * 1024: fail()
+                if type(row['size']) is not int or not 0 <= row['size'] <= MAX_ATTACHMENT: fail()
                 if files[entry]['size'] != row['size'] or files[entry]['sha256'] != row['sha256']: fail()
                 paths.add(entry)
     if set(files) != paths | {table + '.csv' for table in TABLES}: fail()
@@ -334,7 +352,15 @@ def restore_archive(host, archive_path, actor, identity_map=None):
                     descriptor = os.open(target.name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600, dir_fd=root_fd)
                     created_paths.append(target.name)
                     with os.fdopen(descriptor, 'wb') as out, archive.open(row['archive_path']) as source:
-                        shutil.copyfileobj(source, out)
+                        digest = hashlib.sha256()
+                        actual = 0
+                        while chunk := source.read(1024 * 1024):
+                            actual += len(chunk)
+                            if actual > row['size']: raise ValueError('附件恢复大小超限')
+                            digest.update(chunk)
+                            out.write(chunk)
+                        if actual != row['size'] or digest.hexdigest() != row['sha256']:
+                            raise ValueError('附件恢复校验失败')
                     con.execute('INSERT INTO issue_attachments(id,issue_id,comment_id,uploaded_by,original_name,stored_path,mime_type,size,created_at) VALUES(?,?,?,?,?,?,?,?,?)',
                                 (attachment_id, ident, comment_map.get(row['comment_id']), user_map[row['uploaded_by']], row['original_name'], str(target), row['mime_type'], row['size'], row['created_at']))
             host.audit(con, actor['id'], 'requirements_archive_import', details=json.dumps(result))
@@ -382,7 +408,7 @@ def install_routes(host):
                 with path.open('wb') as out:
                     while chunk := await file.read(1024 * 1024):
                         size += len(chunk)
-                        if size > LIMIT: raise HTTPException(413, '归档不能超过 512 MiB')
+                        if size > LIMIT + 64 * 1024 * 1024: raise HTTPException(413, '归档不能超过 10 GiB 加 ZIP 开销')
                         out.write(chunk)
                 return await run_in_threadpool(restore_archive, host, path, user, json.loads(identity_map))
         except (ValueError, TypeError, KeyError, OverflowError, OSError, zipfile.BadZipFile, RuntimeError, csv.Error) as exc:

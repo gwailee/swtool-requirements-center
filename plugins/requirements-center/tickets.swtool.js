@@ -127,7 +127,21 @@ Copyright (c) 2026 上海商江网络科技有限公司版权所有
   };
   const writeOptions = (method, body) => ({method, headers: {"Content-Type": "application/json", "X-CSRF-Token": state.auth.csrfToken || ""}, body: JSON.stringify(body)});
   const setMessage = (message, error) => { if (!elements.status) return; elements.status.textContent = message || ""; elements.status.classList.toggle("is-error", Boolean(error)); };
-  const MiB = 1024 * 1024;
+  let pendingTicket = null, pendingReply = null, createBusy = false, replyBusy = false;
+  const uploadContext = () => JSON.stringify([state.auth?.user?.id || "", state.auth?.csrfToken || "", location.origin]);
+  const uploadSend = (path, options = {}) => request(path.replace(/^\/api(?=\/)/, "/api"), {
+    ...options, headers: {...options.headers, "X-CSRF-Token": state.auth?.csrfToken || ""}
+  });
+  const uploader = () => {
+    if (!window.SWToolAttachmentUploads) throw Error("附件上传组件尚未加载，请刷新页面");
+    return window.SWToolAttachmentUploads;
+  };
+  const lockForm = (target) => {
+    const controls = [...target.querySelectorAll("input, textarea, select, button")];
+    const previous = controls.map(control => control.disabled);
+    controls.forEach(control => { control.disabled = true; });
+    return () => controls.forEach((control, index) => { control.disabled = previous[index]; });
+  };
   const previewError = "当前浏览器无法预览 HEIC/HEIF，请先转换为 JPEG 或 PNG 后重试";
   const isUnsupportedImage = (file) => /^(?:image\/heic|image\/heif)$/i.test(file.type || "") || /\.(?:heic|heif)$/i.test(file.name || "");
 
@@ -154,10 +168,8 @@ Copyright (c) 2026 上海商江网络科技有限公司版权所有
 
   function selectAttachments(files) {
     const selected = Array.from(files || []);
-    if (selected.length > 3) { setMessage("最多选择 3 个附件", true); elements.attachmentInput.value = ""; return; }
-    if (selected.some((file) => file.size <= 0 || file.size > 5 * MiB) || selected.reduce((sum, file) => sum + file.size, 0) > 10 * MiB) {
-      setMessage("单个附件不能超过 5 MiB，合计不能超过 10 MiB", true); elements.attachmentInput.value = ""; return;
-    }
+    try { uploader().validate(selected); }
+    catch (error) { setMessage(error.message, true); elements.attachmentInput.value = ""; return; }
     state.attachmentFiles.forEach((item) => URL.revokeObjectURL(item.url));
     state.attachmentFiles = selected.map((file) => ({file, url: URL.createObjectURL(file), invalid: isUnsupportedImage(file)})); renderAttachmentPreviews(); setMessage(state.attachmentFiles.some((item) => item.invalid) ? previewError : "", state.attachmentFiles.some((item) => item.invalid));
   }
@@ -176,10 +188,8 @@ Copyright (c) 2026 上海商江网络科技有限公司版权所有
 
   function selectReplyAttachments(files) {
     const selected = Array.from(files || []);
-    if (selected.length > 3) { setMessage("最多选择 3 个附件", true); elements.replyAttachmentInput.value = ""; return; }
-    if (selected.some((file) => file.size <= 0 || file.size > 5 * MiB) || selected.reduce((sum, file) => sum + file.size, 0) > 10 * MiB) {
-      setMessage("单个附件不能超过 5 MiB，合计不能超过 10 MiB", true); elements.replyAttachmentInput.value = ""; return;
-    }
+    try { uploader().validate(selected); }
+    catch (error) { setMessage(error.message, true); elements.replyAttachmentInput.value = ""; return; }
     state.replyAttachmentFiles.forEach((item) => URL.revokeObjectURL(item.url));
     state.replyAttachmentFiles = selected.map((file) => ({file, url: URL.createObjectURL(file), invalid: isUnsupportedImage(file)})); renderReplyAttachmentPreviews(); setMessage(state.replyAttachmentFiles.some((item) => item.invalid) ? previewError : "", state.replyAttachmentFiles.some((item) => item.invalid));
   }
@@ -189,7 +199,6 @@ Copyright (c) 2026 上海商江网络科技有限公司版权所有
     state.replyAttachmentFiles = []; elements.replyAttachmentInput.value = ""; renderReplyAttachmentPreviews();
   }
 
-  const fileBase64 = (file) => new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result).split(",", 2)[1] || ""); reader.onerror = () => reject(new Error("截图读取失败")); reader.readAsDataURL(file); });
 
   if (elements.ratingForm) {
     elements.ratingForm.querySelectorAll(".ticket-rating-stars label").forEach((label) => {
@@ -662,25 +671,51 @@ Copyright (c) 2026 上海商江网络科技有限公司版权所有
   }
 
   if (form) form.addEventListener("submit", async (event) => {
-    event.preventDefault(); const title = byId("ticketTitle").value.trim(); const platforms = elements.platforms(); const description = byId("ticketMessage").value.trim();
+    event.preventDefault(); if (createBusy) return;
+    const title = byId("ticketTitle").value.trim(), platforms = elements.platforms(), description = byId("ticketMessage").value.trim();
     if (!title || !platforms.length || !description) { setMessage("请填写标题、至少选择一个平台和问题描述", true); return; }
-    if (state.attachmentFiles.some((item) => item.invalid)) { setMessage(previewError, true); return; }
-    const button = form.querySelector("button[type=submit]"); button.disabled = true; elements.attachmentInput.disabled = true;
-    try { const attachments = await Promise.all(state.attachmentFiles.map(async (item) => ({name: item.file.name, contentBase64: await fileBase64(item.file)}))); const visibility = byId("ticketVisibility")?.value || "private"; const expected_delivery_date = byId("ticketExpectedDeliveryDate")?.value || ""; const ticket = await request("/api/tickets", writeOptions("POST", {title, platform: platforms[0], platforms, description, visibility, expected_delivery_date, attachments})); state.attachmentFiles.forEach((item) => URL.revokeObjectURL(item.url)); state.attachmentFiles = []; state.q = ""; state.page = 1; elements.search.value = ""; form.reset(); renderAttachmentPreviews(); setMessage("需求已提交"); await loadTickets(ticket.id); }
-    catch (error) { setMessage(error.message, true); } finally { button.disabled = false; elements.attachmentInput.disabled = false; }
+    if (state.attachmentFiles.some(item => item.invalid)) { setMessage(previewError, true); return; }
+    const files = state.attachmentFiles.map(item => item.file);
+    try { uploader().validate(files); } catch (error) { setMessage(error.message, true); return; }
+    if (pendingTicket && pendingTicket.context !== uploadContext()) { setMessage("登录身份已变化，请刷新确认原需求后重试", true); return; }
+    createBusy = true; const unlock = lockForm(form);
+    try {
+      if (!pendingTicket) {
+        pendingTicket = {id: null, context: uploadContext()};
+        const visibility = byId("ticketVisibility")?.value || "private", expected_delivery_date = byId("ticketExpectedDeliveryDate")?.value || "";
+        const ticket = await request("/api/tickets", writeOptions("POST", {title, platform: platforms[0], platforms, description, visibility, expected_delivery_date}));
+        pendingTicket.id = ticket.id;
+      }
+      if (!pendingTicket.id) throw Error("提交结果未确认，请刷新列表确认已建需求，避免重复创建");
+      await uploader().upload(uploadSend, pendingTicket.id, files, null, {container: form});
+      const id = pendingTicket.id; pendingTicket = null;
+      state.attachmentFiles.forEach(item => URL.revokeObjectURL(item.url)); state.attachmentFiles = [];
+      state.q = ""; state.page = 1; elements.search.value = ""; form.reset(); renderAttachmentPreviews();
+      setMessage("需求已提交"); await loadTickets(id);
+    } catch (error) { setMessage(error.message + (pendingTicket?.id ? "；需求已保存，再次提交仅重试附件（正文修改请在详情编辑）" : ""), true); }
+    finally { unlock(); createBusy = false; }
   });
   elements.replyForm.addEventListener("submit", async (event) => {
-    event.preventDefault(); const selectedId = state.selected && state.selected.id; const body = elements.reply.value.trim(); if (!selectedId || !body) return;
-    if (state.replyAttachmentFiles.some((item) => item.invalid)) { setMessage(previewError, true); return; }
-    const button = elements.replyForm.querySelector("button[type=submit]"); button.disabled = true; elements.replyAttachmentInput.disabled = true;
+    event.preventDefault(); if (replyBusy) return;
+    const selectedId = state.selected?.id, body = elements.reply.value.trim(); if (!selectedId || !body) return;
+    if (pendingReply && pendingReply.context !== uploadContext()) { setMessage("登录身份已变化，请刷新确认原回复后重试", true); return; }
+    if (pendingReply && pendingReply.ticketId !== selectedId) { setMessage("上一需求的回复附件尚未完成，请先返回原需求重试", true); return; }
+    if (state.replyAttachmentFiles.some(item => item.invalid)) { setMessage(previewError, true); return; }
+    const files = state.replyAttachmentFiles.map(item => item.file);
+    try { uploader().validate(files); } catch (error) { setMessage(error.message, true); return; }
+    replyBusy = true; const unlock = lockForm(elements.replyForm);
     try {
-      const attachments = await Promise.all(state.replyAttachmentFiles.map(async (item) => ({name: item.file.name, contentBase64: await fileBase64(item.file)})));
-      await request(`/api/tickets/${selectedId}/comments`, writeOptions("POST", {body, attachments}));
-      if (state.selected && state.selected.id === selectedId) {
-        elements.replyForm.reset(); clearReplyAttachments(); setMessage("补充已提交"); await loadDetail(selectedId);
+      if (!pendingReply) {
+        pendingReply = {ticketId: selectedId, commentId: null, context: uploadContext()};
+        const result = await request(`/api/tickets/${selectedId}/comments`, writeOptions("POST", {body}));
+        pendingReply.commentId = result.created_comment_id || result.comment_id || (result.body === body && !result.title && !Array.isArray(result.comments) ? result.id : null);
       }
-    }
-    catch (error) { setMessage(error.message, true); } finally { button.disabled = false; elements.replyAttachmentInput.disabled = false; }
+      if (!pendingReply.commentId && files.length) throw Error("回复已保存但编号未确认，请刷新详情确认，避免重复回复");
+      await uploader().upload(uploadSend, selectedId, files, pendingReply.commentId, {container: elements.replyForm});
+      pendingReply = null;
+      if (state.selected?.id === selectedId) { elements.replyForm.reset(); clearReplyAttachments(); setMessage("补充已提交"); await loadDetail(selectedId); }
+    } catch (error) { setMessage(error.message + (pendingReply ? "；再次提交仅重试附件，正文修改请编辑原回复" : ""), true); }
+    finally { unlock(); replyBusy = false; }
   });
   elements.ratingForm.addEventListener("submit", async (event) => {
     event.preventDefault(); const score = Number(elements.ratingForm.querySelector("input:checked")?.value); if (!score) return;

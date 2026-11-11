@@ -6231,7 +6231,7 @@ async def upload_ticket_attachment(ticket_id: str, file: UploadFile = File(...),
 def download_ticket_attachment(ticket_id: str, attachment_id: str, user=Depends(current_issue_user)):
     _requirements_guard(); con = db(); attachment = _attachment_access(con, ticket_id, attachment_id, user); path = Path(attachment["stored_path"]).resolve(); con.close()
     if not path.is_file() or not path.is_relative_to((DATA_DIR / "requirements_attachments").resolve()): raise HTTPException(404, "附件文件不存在")
-    return FileResponse(path, media_type=attachment["mime_type"], filename=attachment["original_name"])
+    return FileResponse(path, media_type=attachment["mime_type"], filename=attachment["original_name"], content_disposition_type="attachment", headers={"X-Content-Type-Options": "nosniff"})
 
 @app.post("/api/tickets", status_code=201)
 def create_ticket(body: dict, user=Depends(current_issue_user)):
@@ -6367,7 +6367,7 @@ def add_ticket_comment(ticket_id: str, body: dict, user=Depends(current_issue_us
     con = db(); row = con.execute("SELECT * FROM issues WHERE id=?", (ticket_id,)).fetchone()
     if not row: con.close(); raise HTTPException(404, "需求不存在")
     if "admin" not in roles_of(user) and row["author_id"] != user["id"]: con.close(); raise HTTPException(403, "无权回复该需求")
-    now=time.time(); con.execute("INSERT INTO issue_comments(issue_id,author_id,body,created_at) VALUES(?,?,?,?)", (ticket_id,user["id"],text,now)); con.execute("UPDATE issues SET updated_at=? WHERE id=?", (now,ticket_id)); con.commit(); item = _ticket_item(con, con.execute("SELECT * FROM issues WHERE id=?", (ticket_id,)).fetchone(), user, True); con.close(); return item
+    now=time.time(); created_comment = con.execute("INSERT INTO issue_comments(issue_id,author_id,body,created_at) VALUES(?,?,?,?) RETURNING id", (ticket_id,user["id"],text,now)).fetchone()["id"]; con.execute("UPDATE issues SET updated_at=? WHERE id=?", (now,ticket_id)); con.commit(); item = _ticket_item(con, con.execute("SELECT * FROM issues WHERE id=?", (ticket_id,)).fetchone(), user, True); con.close(); item["created_comment_id"] = created_comment; return item
 
 @app.patch("/api/tickets/{ticket_id}/comments/{comment_id}")
 def edit_ticket_comment(ticket_id: str, comment_id: int, body: dict, user=Depends(current_issue_user)):
@@ -7845,6 +7845,9 @@ async def predictor_issue_license(request: Request, admin=Depends(require_role("
     finally:
         await form.close()
 
+
+from server.requirements_uploads import install_routes as _install_requirements_upload_routes
+_install_requirements_upload_routes(sys.modules[__name__])
 
 from server.requirements_archive import install_routes as _install_requirements_archive_routes
 _install_requirements_archive_routes(sys.modules[__name__])

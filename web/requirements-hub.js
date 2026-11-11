@@ -1578,27 +1578,40 @@ async function openTicket(id) {
     return safe(async () => {
       controls.forEach(([node]) => { node.disabled = true; });
       try {
+      window.SWToolAttachmentUploads.validate([...form.elements.namedItem("files").files, ...(commentImages?.files() || [])]);
       const body = form.elements.namedItem("body").value,
         files = [...form.elements.namedItem("files").files],
         before = new Set((item.comments || []).map((x) => x.id));
-      let updated = savedComment?.body === body ? {comments: [savedComment]} : await api(
-        "/api/tickets/" + id + "/comments",
-        json("POST", { body }),
-      );
-      if (files.length || commentImages?.files().length || !Array.isArray(updated.comments)) updated = await api("/api/tickets/" + encodeURIComponent(id));
-      const comment = savedComment?.body === body ? savedComment : [...(updated.comments || [])]
-        .reverse()
-        .find(
-          (x) =>
-            !before.has(x.id) &&
-            (String(x.author_id || x.user_id) === String(hub.identity.user_id || hub.identity.id) || x.editableByViewer === true) &&
-            x.body === body,
-        );
-      if ((files.length || commentImages?.files().length) && !comment)
-        throw Error("回复已提交，无法确认附件归属，请刷新后重试");
-      savedComment = comment || null;
-      if (commentImages) await commentImages.submit(upload, id, files, comment?.id);
-      else await upload(id, files, comment?.id);
+      if (savedComment && savedComment.body !== body)
+        throw Error("回复已保存，请先用原正文完成附件重试，再编辑已有回复；不会重复创建回复");
+      const identity = String(hub.identity.user_id || hub.identity.id || "");
+      const scope = JSON.stringify([hub.center, hub.localCenter?.id || "", token, identity]);
+      if (savedComment && savedComment.scope !== scope)
+        throw Error("中心或登录身份已变化，请返回原回复确认附件状态");
+      if (!savedComment) {
+        const since = Date.now();
+        savedComment = {id: null, body, scope};
+        const result = await api("/api/tickets/" + id + "/comments", json("POST", {body}));
+        if (result?.body === body && result.id != null && !Array.isArray(result.comments) && !result.title)
+          savedComment.id = result.id;
+        else if (result?.created_comment_id != null)
+          savedComment.id = result.created_comment_id;
+        else {
+          const updated = Array.isArray(result?.comments) ? result : await api("/api/tickets/" + encodeURIComponent(id));
+          const candidates = (updated.comments || []).filter(x => {
+            const number = Number(x.created_at), created = Number.isFinite(number) && number > 0
+              ? (number < 1e12 ? number * 1000 : number) : Date.parse(x.created_at || "");
+            return !before.has(x.id) && x.body === body &&
+              String(x.author_id || x.user_id || "") === identity && created >= since - 1000;
+          });
+          if (candidates.length === 1) savedComment.id = candidates[0].id;
+        }
+      }
+      if (savedComment.id == null)
+        throw Error("回复已提交，无法唯一确认编号，请刷新详情确认，避免重复创建");
+      const comment = savedComment;
+      if (commentImages) await commentImages.submit((ticket, chosen, commentId) => upload(ticket, chosen, commentId, api, form), id, files, comment?.id);
+      else await upload(id, files, comment?.id, api, form);
       if (!form.isConnected || hub.selected !== id || commentContext[0] !== hub.generation || commentContext[1] !== hub.center || commentContext[2] !== (hub.localCenter?.id || "") || commentContext[3] !== token) return;
       form.reset();
       commentImages?.clear();
@@ -1655,20 +1668,14 @@ async function openTicket(id) {
     );
 }
 window.SWToolOpenRequirement = (id) => safe(() => openTicket(id))();
-async function upload(id, files, commentId, send = api) {
-  for (const file of files) {
-    const form = new FormData();
-    form.append("file", file);
-    await send(
-      "/api/tickets/" +
-        id +
-        "/attachments" +
-        (commentId ? "?comment_id=" + commentId : ""),
-      { method: "POST", body: form },
-    );
-  }
+async function upload(id, files, commentId, send = api, form = null) {
+  const context = JSON.stringify([hub.generation, hub.center, hub.localCenter?.id, token]);
+  return window.SWToolAttachmentUploads.upload(send, id, files, commentId, {
+    container: form || el("hub-detail"), scopeKey: context,
+    assertCurrent: () => { if (context !== JSON.stringify([hub.generation, hub.center, hub.localCenter?.id, token])) throw new WorkspaceChangedError(); },
+  });
 }
-const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024;
+const MAX_ATTACHMENT_SIZE = 1024 * 1024 * 1024;
 function createImagePasteController(form, enabled, render) {
   let files = [];
   let message = "";
@@ -1685,7 +1692,7 @@ function createImagePasteController(form, enabled, render) {
     if (!images.length) return;
     event.preventDefault();
     const valid = images.filter((file) => /^image\//i.test(file.type || "") && file.size <= MAX_ATTACHMENT_SIZE);
-    message = valid.length !== images.length ? "每张图片不得超过 10 MiB，超出限制的图片未添加" : "";
+    message = valid.length !== images.length ? "每张图片不得超过 1 GiB，超出限制的图片未添加" : "";
     files.push(...valid);
     draw();
   };
@@ -1874,6 +1881,7 @@ async function editForm(item = null, parent = null) {
         data.status = selectedStatus;
         if (localCenter) data.if_updated_at = savedVersion;
       }
+      window.SWToolAttachmentUploads.validate([...form.elements.namedItem("files").files, ...editorImages.files()]);
       let result = await ticketApi(
         "/api/tickets" + (savedId ? "/" + savedId : ""),
         json(savedId ? "PATCH" : "POST", data),
@@ -1887,7 +1895,7 @@ async function editForm(item = null, parent = null) {
         savedVersion = result.updated_at;
       }
       savedStatus = result.status;
-      await editorImages.submit((id, files, commentId) => upload(id, files, commentId, ticketApi), result.id, [...form.elements.namedItem("files").files]);
+      await editorImages.submit((id, files, commentId) => upload(id, files, commentId, ticketApi, form), result.id, [...form.elements.namedItem("files").files]);
       if (editorContext !== currentEditorContext()) return;
       if (message) message.textContent = "保存成功，正在刷新…";
       closeDialog();

@@ -1077,3 +1077,7 @@ html[data-theme="contrast"] .hub-body .hub-ticket-row > button[data-ticket-id][a
 .hub-body .hub-title-actions button, .hub-body .hub-comment-actions button { flex: 0 1 auto; width: auto; min-width: 0; max-width: 100%; min-height: 44px; padding: 10px 12px; box-sizing: border-box; white-space: normal; overflow-wrap: anywhere; }
 
 .hub-tree-spacer { pointer-events: none; }
+
+.attachment-upload-queue { padding: 12px; margin-block: 12px; border: 1px solid currentColor; border-radius: 6px; overflow-wrap: anywhere; }
+.attachment-upload-queue progress { display: block; width: 100%; min-height: 14px; margin-block: 8px; }
+.attachment-upload-queue button { min-height: 36px; }

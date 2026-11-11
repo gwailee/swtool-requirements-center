@@ -122,6 +122,7 @@ Copyright (c) 2026 上海商江网络科技有限公司版权所有
       const comment = /^\/local-centers\/[A-Za-z0-9_-]+\/tickets\/[A-Za-z0-9_-]+\/comments\/[A-Za-z0-9_-]+$/.test(nearPath);
       const rating = /^\/local-centers\/[A-Za-z0-9_-]+\/tickets\/[A-Za-z0-9_-]+\/rating$/.test(nearPath);
       const attachments = /^\/local-centers\/[A-Za-z0-9_-]+\/tickets\/[A-Za-z0-9_-]+\/attachments(?:\?comment_id=[A-Za-z0-9_-]+)?$/.test(nearPath);
+      const attachmentUpload = /^\/local-centers\/[A-Za-z0-9_-]+\/tickets\/[A-Za-z0-9_-]+\/attachment-uploads(?:\/[A-Za-z0-9_-]+(?:\/(?:chunks|complete))?)?$/.test(nearPath);
       const attachment = /^\/local-centers\/[A-Za-z0-9_-]+\/tickets\/[A-Za-z0-9_-]+\/attachments\/[A-Za-z0-9_-]+(?:\?download=1)?$/.test(nearPath);
       const driver = nearPath === "/requirements/driver" || /^\/local-centers\/[A-Za-z0-9_-]+\/driver$/.test(nearPath);
       const driverLogs = /^\/requirements\/driver\/logs(?:\?[^#]*)?$/.test(nearPath) || /^\/local-centers\/[A-Za-z0-9_-]+\/driver\/logs(?:\?[^#]*)?$/.test(nearPath);
@@ -130,7 +131,7 @@ Copyright (c) 2026 上海商江网络科技有限公司版权所有
         (tickets && ["GET", "POST"].includes(method) && (method !== "POST" || !nearPath.includes("?"))) ||
         (ticket && ["GET", "PATCH", "DELETE"].includes(method)) || (comments && method === "POST") ||
         (comment && ["PATCH", "DELETE"].includes(method)) ||
-        (rating && method === "POST") || (attachments && method === "POST") || (attachment && ["GET", "DELETE"].includes(method)) ||
+        (rating && method === "POST") || (attachmentUpload && ["POST", "DELETE"].includes(method)) || (attachments && method === "POST") || (attachment && ["GET", "DELETE"].includes(method)) ||
         (driver && method === "GET") || (driverLogs && method === "GET") || (driverAction && method === "POST");
       if (!allowed) return blocked();
       const headers = new Headers(options.headers || {});
@@ -147,6 +148,7 @@ Copyright (c) 2026 上海商江网络科技有限公司版权所有
       headers.set("X-SWTool-Expected-User", initialPrincipal);
       if (method !== "GET") headers.set("X-CSRF-Token", status.csrfToken);
       const result = await raw(`${api}${nearPath}`, {...options, method, headers, body});
+      if (attachment && method === "GET") return result;
       const data = result.ok && result.status !== 204 ? await result.json() : null;
       const currentStatus = await auth();
       if (!currentStatus.authenticated || !initialPrincipal) throw Error("请先登录宿主并重新加载页面");
@@ -160,13 +162,14 @@ Copyright (c) 2026 上海商江网络科技有限公司版权所有
       return json(data);
     }
     const remoteTicket = /^\/api\/tickets(?:\?[^#]*)?$/.test(path) || /^\/api\/tickets\/[A-Za-z0-9_-]+(?:\/comments(?:\/[A-Za-z0-9_-]+)?)?$/.test(path);
+    const ticketUploadRoute = /^\/api\/tickets\/[A-Za-z0-9_-]+\/attachment-uploads(?:\/[A-Za-z0-9_-]+(?:\/(?:chunks|complete))?)?$/.test(path);
     const remoteAttachment = /^\/api\/tickets\/[A-Za-z0-9_-]+\/attachments(?:\/[A-Za-z0-9_-]+)?(?:\?[^#]*)?$/.test(path);
-    const localTicket = !center && (remoteTicket || remoteAttachment);
-    const ticketWrite = center && ((method === "POST" && (path === "/api/tickets" || /^\/api\/tickets\/[A-Za-z0-9_-]+\/comments(?:\/[A-Za-z0-9_-]+)?$/.test(path) || remoteAttachment)) || (["PATCH", "DELETE"].includes(method) && (/^\/api\/tickets\/[A-Za-z0-9_-]+$/.test(path) || /^\/api\/tickets\/[A-Za-z0-9_-]+\/comments\/[A-Za-z0-9_-]+$/.test(path))));
+    const localTicket = !center && (remoteTicket || remoteAttachment || ticketUploadRoute);
+    const ticketWrite = center && ((ticketUploadRoute && ["POST", "DELETE"].includes(method)) || (method === "POST" && (path === "/api/tickets" || /^\/api\/tickets\/[A-Za-z0-9_-]+\/comments(?:\/[A-Za-z0-9_-]+)?$/.test(path) || remoteAttachment)) || (["PATCH", "DELETE"].includes(method) && (/^\/api\/tickets\/[A-Za-z0-9_-]+$/.test(path) || /^\/api\/tickets\/[A-Za-z0-9_-]+\/comments\/[A-Za-z0-9_-]+$/.test(path))));
     const localArchiveImport = !remote && path === `${api}/tools/import` && method === "POST";
     if (method !== "GET" && !ticketWrite && !localTicket && !localArchiveImport && (remote || !(/^\/api\/requirements\/(?:key(?:\/(?:rotate|reveal))?|connections(?:\/[A-Za-z0-9_-]+)?)$/.test(path)))) return blocked();
     if (remote && center && path === "/api/requirements/cases" && method === "GET") return json({error: "远端服务暂不支持关联用例查询", code: "remote_cases_unsupported"}, 501);
-    if (remote && center && !remoteTicket && !remoteAttachment && path !== "/api/requirements/identity") return json({error: "目标中心暂不支持此能力，请在目标中心操作"}, 403);
+    if (remote && center && !remoteTicket && !remoteAttachment && !ticketUploadRoute && path !== "/api/requirements/identity") return json({error: "目标中心暂不支持此能力，请在目标中心操作"}, 403);
     if (path === "/api/requirements/cases" && method === "GET") return json({error: "宿主暂不支持关联用例查询"}, 501);
     if ((path === "/me" || path === "/api/auth/status") && method === "GET") {
       const status = await auth();
@@ -265,10 +268,12 @@ Copyright (c) 2026 上海商江网络科技有限公司版权所有
         body = JSON.stringify({attachments: await jsonAttachments(body)});
         headers.set("Content-Type", "application/json");
       } else if (!headers.has("Content-Type") && !(typeof FormData !== "undefined" && body instanceof FormData)) headers.set("Content-Type", "application/json");
-      const result = await payload(`${api}${path.slice(4)}`, {method, headers: {...Object.fromEntries(headers.entries()), "X-CSRF-Token": await csrf()}, body});
+      const result = await payload(`${api}${path.slice(4)}`, {method, signal: options.signal, headers: {...Object.fromEntries(headers.entries()), "X-CSRF-Token": await csrf()}, body});
+      if (ticketUploadRoute) return json(result);
       return json(projectHistory(result.ticket || result));
     }
-    if ((remoteTicket || remoteAttachment) && center) {
+    if ((remoteTicket || remoteAttachment || ticketUploadRoute) && center) {
+      if (remoteAttachment && method === "GET") return raw(`${api}/tools/connections/${encodeURIComponent(center)}/tickets${path.slice("/api/tickets".length)}`, options);
       const tail = path.slice("/api/tickets".length);
       const headers = new Headers(options.headers || {});
       headers.delete("Authorization");
@@ -277,9 +282,10 @@ Copyright (c) 2026 上海商江网络科技有限公司版权所有
         body = JSON.stringify({attachments: await jsonAttachments(body)});
         headers.set("Content-Type", "application/json");
       } else if (method !== "GET" && !headers.has("Content-Type") && !(typeof FormData !== "undefined" && body instanceof FormData)) headers.set("Content-Type", "application/json");
-      const result = await payload(`${api}/tools/connections/${encodeURIComponent(center)}/tickets${tail}`, {method, headers: {...Object.fromEntries(headers.entries()), "X-CSRF-Token": await csrf()}, ...(method === "GET" ? {} : {body})});
+      const result = await payload(`${api}/tools/connections/${encodeURIComponent(center)}/tickets${tail}`, {method, signal: options.signal, headers: {...Object.fromEntries(headers.entries()), "X-CSRF-Token": await csrf()}, ...(method === "GET" ? {} : {body})});
       if (remoteAttachment && method === "GET") return binaryResponse(result) || json(result);
       if (remoteAttachment) return json(projectHistory(result.ticket || result));
+      if (ticketUploadRoute) return json(result);
       if (method !== "GET") return json(projectHistory(result.ticket || result));
       if (tail.startsWith("/")) return json(projectHistory(result.ticket || result));
       const items = (result.items || result.tickets || []).map(projectHistory);
