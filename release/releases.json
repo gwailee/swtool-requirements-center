@@ -1,7 +1,20 @@
 {
   "format": 1,
-  "current_version": "1.5.1",
+  "current_version": "1.5.2",
   "releases": [
+    {
+      "platform": "source",
+      "version": "1.5.2",
+      "released_at": "2026-11-17",
+      "features": [
+        "管理员可编辑及移除其他用户创建的近端中心",
+        "近端中心列表显示创建者用户名，支持手机换行"
+      ],
+      "notes": "宿主近端中心管理能力；管理员可查看及管理所有中心，普通用户仍仅管理本人中心。独立版同步共享页面，不新增近端数据库 API。移除中心保留附件清理队列，后台可重试。",
+      "url": "https://swtool.com/plugins/requirements-center/api/tools/source",
+      "sha256": null,
+      "size": null
+    },
     {
       "platform": "source",
       "version": "1.5.1",

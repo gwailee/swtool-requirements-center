@@ -2058,7 +2058,16 @@ async function settings() {
         const link = document.createElement("a");
         link.href = hubHomePath + "?local_center=" + encodeURIComponent(center.id);
         link.textContent = center.name + (center.visibility === "private" ? " · 私有" : " · 公开");
+        if (item.style) item.style.flexWrap = "wrap";
         item.append(link);
+        const owner = document.createElement("span");
+        owner.textContent = "创建者：" + String(center.owner_username || "");
+        if (owner.style) {
+          owner.style.overflowWrap = "anywhere";
+          owner.style.minWidth = "0";
+          owner.style.flexBasis = "100%";
+        }
+        item.append(owner);
         const edit = document.createElement("button");
         edit.type = "button"; edit.textContent = "编辑";
         edit.onclick = () => {
