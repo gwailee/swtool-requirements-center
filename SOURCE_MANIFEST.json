@@ -55,7 +55,7 @@
     {
       "path": "plugins/requirements-center/plugin.json",
       "size": 948,
-      "sha256": "2c91f4234fc4dc019326baa8e6abe6e56c47bc8885d79d00fbc959c0d250d744"
+      "sha256": "ca4695553617cb9dc03ef9be773194e7e208acb2820ed14d832d8fd80abb7dbe"
     },
     {
       "path": "plugins/requirements-center/tickets.swtool.html",
@@ -149,13 +149,13 @@
     },
     {
       "path": "release/releases.json",
-      "size": 13160,
-      "sha256": "9e9d546352de536f77f4c39c77263c6b66786a0c15505a1569fb9bc2901ba30d"
+      "size": 13855,
+      "sha256": "a0b703611472dec7d7e10c8374a5ff3b983b2810525810923798c9b6ea4aa044"
     },
     {
       "path": "web/index.html",
-      "size": 6414,
-      "sha256": "6076672ea53d420c3db0ec71f263931e83b6838e029b6e0d9ed044b28f958e21"
+      "size": 6417,
+      "sha256": "c4cd519fcdef7f435a65fd1fbfa7e4aa13106f6bbad373980982f74ec4115225"
     },
     {
       "path": "web/plugin-manager.css",
@@ -209,23 +209,23 @@
     },
     {
       "path": "web/requirements-hub.html",
-      "size": 15091,
-      "sha256": "adbb738446f13ecf9c9213b516c2c52c34a3750517e6cd4edfe542a7222e0e02"
+      "size": 15094,
+      "sha256": "7c7790f8c9ffe45b293d6095fb92f3351599d19ff01e24b66b823cfc183e1504"
     },
     {
       "path": "web/requirements-center-create.html",
-      "size": 5479,
-      "sha256": "68c7c1ac65657c07f43aa1f8ac84f0d54dcfd9c9fb5a122b540db479b74d6d47"
+      "size": 5482,
+      "sha256": "01c82009f95b0bd9d17ec7bf376d59020dff9f3e869780218612963e43856a7e"
     },
     {
       "path": "web/requirements-center.html",
-      "size": 6414,
-      "sha256": "6076672ea53d420c3db0ec71f263931e83b6838e029b6e0d9ed044b28f958e21"
+      "size": 6417,
+      "sha256": "c4cd519fcdef7f435a65fd1fbfa7e4aa13106f6bbad373980982f74ec4115225"
     },
     {
       "path": "web/requirements-hub.js",
-      "size": 127843,
-      "sha256": "2a488f6a30eb96841f20528718acb8816ab01dd503422be7a1656ec960e846c9"
+      "size": 130482,
+      "sha256": "42c47edc8c361dc1a20f5c402d6033157e87be15bfabb08308815fac53e4ef4c"
     },
     {
       "path": "web/requirements-release.js",

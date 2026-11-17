@@ -1,7 +1,20 @@
 {
   "format": 1,
-  "current_version": "1.5.0",
+  "current_version": "1.5.1",
   "releases": [
+    {
+      "platform": "source",
+      "version": "1.5.1",
+      "released_at": "2026-11-17",
+      "features": [
+        "近端中心可选择私有或公开，新建默认私有，编辑可切换",
+        "既有近端中心保持公开，中心级访问权限由服务端统一校验"
+      ],
+      "notes": "近端中心 API 由宿主提供，私有中心仅本人及平台管理员可见；公开不授予其他用户管理权限。独立版同步共享页面，不新增宿主近端数据库 API。正式交付以同版源码 ZIP 和发布验收为准。",
+      "url": "https://swtool.com/plugins/requirements-center/api/tools/source",
+      "sha256": null,
+      "size": null
+    },
     {
       "platform": "source",
       "version": "1.5.0",

@@ -2057,26 +2057,55 @@ async function settings() {
         item.className = "hub-local-center";
         const link = document.createElement("a");
         link.href = hubHomePath + "?local_center=" + encodeURIComponent(center.id);
-        link.textContent = center.name;
+        link.textContent = center.name + (center.visibility === "private" ? " · 私有" : " · 公开");
         item.append(link);
         const edit = document.createElement("button");
         edit.type = "button"; edit.textContent = "编辑";
         edit.onclick = () => {
-          dialog("编辑近端中心", '<form id="hub-local-edit-form" class="hub-dialog-form"><label>名称<input name="name" required maxlength="100" value="' + esc(center.name) + '"></label><button class="primary" type="submit">保存</button><p id="hub-local-edit-message" role="status"></p></form>');
+          dialog("编辑近端中心", '<form id="hub-local-edit-form" class="hub-dialog-form"><label>名称<input name="name" required maxlength="100" value="' + esc(center.name) + '"></label><label>可见范围<select name="visibility"><option value="private"' + (center.visibility === "private" ? " selected" : "") + '>私有（仅本人及平台管理员可见）</option><option value="public"' + (center.visibility !== "private" ? " selected" : "") + '>公开（其他用户可查看和发布需求）</option></select></label><button class="primary" type="submit">保存</button><p id="hub-local-edit-message" role="status"></p></form>');
           const form = el("hub-local-edit-form");
-          form.onsubmit = async (event) => { event.preventDefault(); const button = form.querySelector("button"); button.disabled = true; try { await local("/api/local-centers/" + encodeURIComponent(center.id), json("PATCH", {name: form.elements.namedItem("name").value})); closeDialog(); await refreshLocalCenters(); } catch (error) { el("hub-local-edit-message").textContent = error.message; } finally { button.disabled = false; } };
+          form.onsubmit = async (event) => { event.preventDefault(); const button = form.querySelector("button"); button.disabled = true; try { await local("/api/local-centers/" + encodeURIComponent(center.id), json("PATCH", {name: form.elements.namedItem("name").value, visibility: form.elements.namedItem("visibility").value})); closeDialog(); await refreshLocalCenters(); } catch (error) { el("hub-local-edit-message").textContent = error.message; } finally { button.disabled = false; } };
         };
+        const merge = document.createElement("button");
+        merge.type = "button";
+        const mergeStatus = String(center.merge_status || center.mergeStatus || "").toLowerCase();
+        const mergeAdmin = hub.user?.roles?.some((role) => ["admin", "superadmin"].includes(String(role).toLowerCase())) || hub.user?.role === "admin";
+        merge.textContent = mergeStatus === "pending" ? "合并审核中" : (mergeAdmin ? "一键合并" : "申请合并");
+        merge.disabled = mergeStatus === "pending" || mergeStatus === "merged";
+        merge.title = mergeAdmin ? "将该近端中心需求合并到总需求中心" : "提交后由管理员审核，再合并到总需求中心";
+        merge.onclick = action(async () => {
+          if (merge.disabled) return;
+          const message = mergeAdmin
+            ? "确认将该近端中心的需求合并到总需求中心？重复运行会自动跳过已合并需求。"
+            : "提交合并申请后由管理员审核，确认继续？";
+          if (!confirm(message)) return;
+          merge.disabled = true;
+          merge.textContent = "处理中…";
+          try {
+            const result = await local("/api/local-centers/" + encodeURIComponent(center.id) + "/merge", json("POST", {}));
+            merge.textContent = result?.status === "pending" ? "合并审核中" : "已合并";
+            if (result?.message) el("hub-local-message").textContent = result.message;
+            await refreshLocalCenters();
+          } catch (error) {
+            merge.disabled = false;
+            merge.textContent = mergeAdmin ? "一键合并" : "申请合并";
+            el("hub-local-message").textContent = error.message || "合并失败，请稍后重试";
+          }
+        });
         const remove = document.createElement("button");
         remove.type = "button"; remove.textContent = "移除";
         remove.onclick = action(async () => { if (!confirm("确认移除该近端中心？有工单时需要先处理工单。")) return; await local("/api/local-centers/" + encodeURIComponent(center.id), {method: "DELETE"}); await refreshLocalCenters(); });
-        item.append(edit, remove); el("hub-local-centers").append(item);
+        if (center.can_edit_center === true) item.append(edit);
+        item.append(merge);
+        if (center.can_edit_center === true) item.append(remove);
+        el("hub-local-centers").append(item);
       }
       el("hub-local-message").textContent = result.centers?.length ? "" : "暂无近端中心";
     } catch (error) { if (currentSettings()) el("hub-local-message").textContent = error.message + "；可点击刷新重试"; }
   };
   el("hub-local-retry").onclick = refreshLocalCenters;
   el("hub-local-add").onclick = () => {
-    dialog("添加近端中心", '<form id="hub-local-form" class="hub-dialog-form"><p>数据由服务器保存，创建者拥有该中心的管理权限。</p><label>名称<input name="name" required maxlength="80"></label><button class="primary" type="submit">创建中心</button><p id="hub-local-form-message" role="status"></p></form>');
+    dialog("添加近端中心", '<form id="hub-local-form" class="hub-dialog-form"><p>数据由服务器保存，创建者拥有该中心的管理权限。</p><label>名称<input name="name" required maxlength="80"></label><label>可见范围<select name="visibility"><option value="private" selected>私有（仅本人及平台管理员可见）</option><option value="public">公开（其他用户可查看和发布需求）</option></select></label><button class="primary" type="submit">创建中心</button><p id="hub-local-form-message" role="status"></p></form>');
     const form = el("hub-local-form");
     form.onsubmit = async (event) => {
       event.preventDefault();
@@ -2085,7 +2114,7 @@ async function settings() {
       try {
         const name = form.elements.namedItem("name").value.trim();
         if (!name) throw Error("请填写名称");
-        const result = await local("/api/local-centers", json("POST", {name}));
+        const result = await local("/api/local-centers", json("POST", {name, visibility: form.elements.namedItem("visibility").value}));
         if (!currentSettings() || !form.isConnected) return;
         location.href = hubHomePath + "?local_center=" + encodeURIComponent(result.center.id);
       } catch (error) { if (currentSettings() && form.isConnected) el("hub-local-form-message").textContent = error.message; }
